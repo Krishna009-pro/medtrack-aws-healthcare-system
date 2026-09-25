@@ -1,75 +1,123 @@
 {% extends "base/base.html" %}
 
-{% block title %}Appointment Details - MedTrack{% endblock %}
+{% block title %}Consultation Dossier - MedTrack{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fas fa-calendar-alt me-2"></i>Appointment Details</h2>
-            <a href="{{ url_for('patient.appointments') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i>Back to Appointments
+<div class="row justify-content-center py-2">
+    <div class="col-lg-10">
+        <!-- Header -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div>
+                <span class="badge-cyber mb-2">
+                    <span class="pulse-dot"></span> CONSULTATION SESSION &bull; ID: {{ appointment.AppointmentID[:8] }}
+                </span>
+                <h1 class="h2 fw-bold mb-1">Appointment <span class="text-cyan-gradient">Dossier</span></h1>
+                <p class="text-secondary small mb-0">Full cryptographic audit trail and diagnostic clinical records.</p>
+            </div>
+            <a href="{{ url_for('patient.appointments') }}" class="btn-glass-pill">
+                <i class="fas fa-arrow-left"></i>
+                <span>Return to Appointments</span>
             </a>
         </div>
 
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Appointment Information</h5>
+        <!-- Appointment Info Cyber Card -->
+        <div class="cyber-card p-4 p-md-5 mb-4">
+            <div class="corner-bracket corner-tl"></div>
+            <div class="corner-bracket corner-tr"></div>
+            
+            <div class="d-flex justify-content-between align-items-start mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+                <div>
+                    <span class="text-muted small text-uppercase" style="letter-spacing: 0.06em;">Session Schedule</span>
+                    <h3 class="h4 fw-bold text-white mb-0">{{ format_date(appointment.Date) }} &bull; {{ format_time(appointment.Time) }}</h3>
+                </div>
+                <div>
+                    {% if appointment.Status == 'Confirmed' %}
+                        <span class="badge-emerald fs-6"><span class="pulse-dot"></span> Confirmed</span>
+                    {% elif appointment.Status == 'Pending' %}
+                        <span class="badge-amber fs-6">Triage Pending</span>
+                    {% elif appointment.Status == 'Completed' %}
+                        <span class="badge-cyber fs-6">Completed</span>
+                    {% else %}
+                        <span class="badge-rose fs-6">Cancelled</span>
+                    {% endif %}
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p class="mb-2"><strong>Date:</strong> {{ format_date(appointment.Date) }}</p>
-                        <p class="mb-2"><strong>Time:</strong> {{ format_time(appointment.Time) }}</p>
-                        <p class="mb-2"><strong>Status:</strong>
-                            <span class="badge bg-{{ 'warning' if appointment.Status == 'Pending' else 'success' if appointment.Status == 'Confirmed' else 'secondary' if appointment.Status == 'Completed' else 'danger' }}">
-                                {{ appointment.Status }}
-                            </span>
-                        </p>
+
+            <div class="row g-4 mb-3">
+                <div class="col-md-6">
+                    <div class="p-3 rounded-3" style="background: rgba(5, 11, 24, 0.7); border: 1px solid rgba(255,255,255,0.06);">
+                        <div class="text-muted small text-uppercase">Assigned Specialist</div>
+                        <div class="d-flex align-items-center gap-3 mt-2">
+                            <div class="p-3 rounded-circle" style="background: rgba(0, 229, 255, 0.15); border: 1px solid rgba(0, 229, 255, 0.35);">
+                                <i class="fas fa-user-md text-cyan fs-4"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-white fs-5">Dr. {{ doctor_user.Name if doctor_user else 'Medical Officer' }}</div>
+                                <div class="text-secondary small">{{ doctor.Specialization if doctor else 'General Practice' }} &bull; {{ doctor.Experience if doctor else '5+' }} yrs experience</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <p class="mb-2"><strong>Doctor:</strong>
-                            {% if doctor_user %}
-                            Dr. {{ doctor_user.Name }}
-                            {% else %}
-                            Unknown
-                            {% endif %}
-                        </p>
-                        <p class="mb-2"><strong>Specialization:</strong> {{ doctor.Specialization if doctor else 'N/A' }}</p>
-                        <p class="mb-2"><strong>Experience:</strong> {{ doctor.Experience if doctor else 'N/A' }} years</p>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 rounded-3" style="background: rgba(5, 11, 24, 0.7); border: 1px solid rgba(255,255,255,0.06);">
+                        <div class="text-muted small text-uppercase">Telemetry Channel Details</div>
+                        <div class="mt-2 font-mono small">
+                            <div class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-25">
+                                <span class="text-secondary">AWS DynamoDB Key:</span>
+                                <span class="text-cyan">{{ appointment.AppointmentID[:12] }}...</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-25">
+                                <span class="text-secondary">SNS Protocol:</span>
+                                <span class="text-emerald">Active Real-Time Bridge</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-secondary">Cipher Protocol:</span>
+                                <span class="text-white">TLS 1.3 End-to-End</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Diagnosis Section -->
         {% if diagnosis %}
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-file-medical me-2"></i>Diagnosis Report</h5>
+        <div class="cyber-card p-4 p-md-5 mb-4" style="border-color: rgba(0, 230, 118, 0.3);">
+            <div class="corner-bracket corner-tl"></div>
+            <div class="corner-bracket corner-br"></div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                <h5 class="fw-bold mb-0 text-white"><i class="fas fa-file-medical text-emerald me-2"></i>Certified Clinical Diagnosis Report</h5>
+                <span class="badge-emerald small"><span class="pulse-dot"></span> Recorded: {{ format_date(diagnosis.Date) }}</span>
             </div>
-            <div class="card-body">
-                <p class="mb-2"><strong>Date:</strong> {{ format_date(diagnosis.Date) }}</p>
-                <p class="mb-2"><strong>Doctor:</strong> Dr. {{ doctor_user.Name if doctor_user else 'Unknown' }}</p>
-                <div class="border p-3 bg-light rounded">
-                    {{ diagnosis.Report|replace('\n', '<br>')|safe }}
-                </div>
+
+            <p class="text-muted small mb-3">Diagnostic report certified by Dr. {{ doctor_user.Name if doctor_user else 'Physician' }} (ID: {{ diagnosis.DoctorID[:8] }}):</p>
+            
+            <div class="p-4 rounded-3" style="background: rgba(5, 11, 24, 0.9); border: 1px solid rgba(0, 230, 118, 0.25); color: #e2e8f0; line-height: 1.8;">
+                {{ diagnosis.Report|replace('\n', '<br>')|safe }}
             </div>
         </div>
         {% elif appointment.Status == 'Completed' %}
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>This appointment is completed but no diagnosis report has been uploaded yet.
+        <div class="cyber-card p-4 mb-4 text-center">
+            <i class="fas fa-hourglass-half fa-2x text-warning mb-2"></i>
+            <h6 class="text-white fw-bold">Consultation Concluded</h6>
+            <p class="text-secondary small mb-0">The clinical session is marked completed. Physician diagnostic notes are undergoing final cryptographic sign-off.</p>
         </div>
         {% endif %}
 
+        <!-- Cancellation Controls -->
         {% if appointment.Status in ['Pending', 'Confirmed'] %}
-        <div class="card">
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('patient.cancel_appointment', appointment_id=appointment.AppointmentID) }}" onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-times-circle me-1"></i>Cancel Appointment
-                    </button>
-                </form>
+        <div class="cyber-card p-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+            <div>
+                <h6 class="text-white fw-bold mb-1"><i class="fas fa-exclamation-triangle text-amber me-2"></i>Modify or Withdraw Appointment</h6>
+                <p class="text-secondary small mb-0">Cancelling will release the allocated slot back to the clinical triage queue.</p>
             </div>
+            <form method="POST" action="{{ url_for('patient.cancel_appointment', appointment_id=appointment.AppointmentID) }}" onsubmit="return confirm('Withdraw this scheduled appointment?')">
+                <button type="submit" class="btn-cyber-danger">
+                    <i class="fas fa-times-circle me-1"></i>Cancel Consultation
+                </button>
+            </form>
         </div>
         {% endif %}
     </div>

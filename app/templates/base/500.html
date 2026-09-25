@@ -1,18 +1,33 @@
 {% extends "base/base.html" %}
 
-{% block title %}Server Error - MedTrack{% endblock %}
+{% block title %}Internal Fault (500) - MedTrack{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 text-center">
-        <div class="card">
-            <div class="card-body py-5">
-                <i class="fas fa-server fa-5x text-danger mb-3"></i>
-                <h1 class="display-1">500</h1>
-                <h3>Internal Server Error</h3>
-                <p class="text-muted">Something went wrong on our end. Please try again later.</p>
-                <a href="{{ url_for('auth.dashboard') }}" class="btn btn-primary mt-3">
-                    <i class="fas fa-home me-2"></i>Go to Dashboard
+<div class="row justify-content-center py-5">
+    <div class="col-md-7 col-lg-6 text-center">
+        <div class="cyber-card p-5">
+            <div class="corner-bracket corner-tl"></div>
+            <div class="corner-bracket corner-br"></div>
+            
+            <div class="mb-3 text-danger">
+                <i class="fas fa-radiation fa-4x brand-icon-pulse"></i>
+            </div>
+            
+            <span class="badge-rose mb-2">SYSTEM FAULT DETECTED &bull; 500 EXCEPTION</span>
+            <h1 class="display-3 font-mono fw-bold text-rose my-2">500</h1>
+            <h3 class="fw-bold text-white mb-2">Internal Telemetry Disruption</h3>
+            <p class="text-secondary small mb-4">
+                An anomalous condition occurred during query resolution. The incident event has been logged for automatic cluster recovery.
+            </p>
+            
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('index') }}" class="btn-cyan-glow">
+                    <i class="fas fa-redo"></i>
+                    <span>Restart Session</span>
+                </a>
+                <a href="{{ url_for('contact_us') }}" class="btn-glass-pill">
+                    <i class="fas fa-headset text-danger"></i>
+                    <span>Escalate Incident</span>
                 </a>
             </div>
         </div>

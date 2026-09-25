@@ -1,77 +1,129 @@
 {% extends "base/base.html" %}
 
-{% block title %}My Schedule - MedTrack{% endblock %}
+{% block title %}Clinician Daily Schedule - MedTrack{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-calendar-day me-2"></i>Schedule</h2>
-    <form method="GET" class="d-flex gap-2">
-        <input type="date" class="form-control" name="date" value="{{ date }}" style="width: auto;" max="{{ max_date }}">
-        <button type="submit" class="btn btn-primary">View</button>
-    </form>
+<!-- Top Header & Date Navigation -->
+<div class="row align-items-center mb-4 g-3">
+    <div class="col-md-6">
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge-status-cyan"><i class="fas fa-calendar-day me-1"></i>SLOT DISPATCH ROSTER</span>
+            <span class="text-secondary small font-monospace">ACTIVE_DATE: {{ date }}</span>
+        </div>
+        <h2 class="display-6 fw-bold mb-0 text-white">
+            <i class="fas fa-calendar-check me-2 text-cyan"></i>Daily Schedule
+        </h2>
+        <p class="text-secondary small mb-0">Roster overview for <span class="text-white fw-bold">{{ format_date(date) }}</span></p>
+    </div>
+    
+    <div class="col-md-6">
+        <form method="GET" class="d-flex justify-content-md-end gap-2 align-items-center">
+            <label class="text-cyan small font-monospace d-none d-sm-inline">DATE_QUERY:</label>
+            <input type="date" class="form-control cyber-input" name="date" value="{{ date }}" style="width: auto;" max="{{ max_date }}">
+            <button type="submit" class="btn btn-cyber-primary">
+                <i class="fas fa-magnifying-glass me-1"></i>Load
+            </button>
+            <a href="{{ url_for('doctor.schedule', date=date) }}" class="btn btn-cyber-outline" title="Refresh Live Slots">
+                <i class="fas fa-rotate"></i>
+            </a>
+        </form>
+    </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <h5 class="mb-3">{{ format_date(date) }}</h5>
+<!-- Schedule Grid Card -->
+<div class="cyber-card">
+    <div class="corner-bracket corner-top-left"></div>
+    <div class="corner-bracket corner-bottom-right"></div>
+    
+    <div class="cyber-card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge-status-emerald py-0 px-2 small font-monospace"><i class="fas fa-bolt me-1"></i>REAL-TIME SLOTS</span>
+            <h5 class="mb-0 text-white fw-bold">{{ format_date(date) }}</h5>
+        </div>
+        <div class="text-secondary small font-monospace">
+            BOOKED: {{ booked_slots|length }} / {{ all_slots|length }}
+        </div>
+    </div>
 
+    <div class="cyber-card-body p-0">
         <div class="table-responsive">
-            <table class="table table-bordered schedule-table">
-                <thead class="table-light">
+            <table class="cyber-table table align-middle mb-0">
+                <thead>
                     <tr>
-                        <th style="width: 100px;">Time</th>
-                        <th>Patient</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th style="width: 140px;">SLOT TIME</th>
+                        <th>RESERVATION STATUS</th>
+                        <th>PATIENT IDENTITY</th>
+                        <th>SESSION STAGE</th>
+                        <th class="text-end">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for slot in all_slots %}
-                    <tr>
-                        <td class="fw-bold">{{ format_time(slot) }}</td>
-                        {% if slot in booked_slots %}
-                        {% set apt = booked_slots[slot] %}
+                    {% if slot in booked_slots %}
+                    {% set apt = booked_slots[slot] %}
+                    {% set pat = patient_model.get_by_id(apt.PatientID) %}
+                    {% set pat_user = user_model.get_by_id(pat.UserID) if pat else None %}
+                    <tr style="background: rgba(0, 229, 255, 0.03);">
                         <td>
-                            {% set pat = patient_model.get_by_id(apt.PatientID) %}
-                            {% if pat %}
-                                {% set pat_user = user_model.get_by_id(pat.UserID) %}
-                                {{ pat_user.Name if pat_user else 'Unknown' }}
-                            {% else %}
-                                Unknown
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span class="badge bg-{{ 'warning' if apt.Status == 'Pending' else 'success' if apt.Status == 'Confirmed' else 'secondary' if apt.Status == 'Completed' else 'danger' }}">
-                                {{ apt.Status }}
+                            <span class="badge-status-cyan font-monospace py-1 px-2">
+                                <i class="fas fa-clock me-1"></i>{{ format_time(slot) }}
                             </span>
                         </td>
                         <td>
-                            <a href="{{ url_for('doctor.appointment_detail', appointment_id=apt.AppointmentID) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-eye"></i>
+                            <span class="badge bg-dark text-cyan border border-info border-opacity-25 font-monospace small">
+                                <i class="fas fa-lock me-1"></i>OCCUPIED
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-cyan" 
+                                     style="width: 30px; height: 30px; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.2);">
+                                    <i class="fas fa-user small"></i>
+                                </div>
+                                <span class="fw-bold text-white">{{ pat_user.Name if pat_user else 'Unknown Patient' }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if apt.Status == 'Confirmed' %}
+                                <span class="badge-status-emerald"><i class="fas fa-circle-check me-1"></i>CONFIRMED</span>
+                            {% elif apt.Status == 'Pending' %}
+                                <span class="badge-status-cyan"><i class="fas fa-hourglass-half me-1"></i>PENDING</span>
+                            {% elif apt.Status == 'Completed' %}
+                                <span class="badge bg-secondary text-light font-monospace"><i class="fas fa-check-double me-1"></i>COMPLETED</span>
+                            {% else %}
+                                <span class="badge bg-danger text-light font-monospace"><i class="fas fa-ban me-1"></i>CANCELLED</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('doctor.appointment_detail', appointment_id=apt.AppointmentID) }}" class="btn btn-sm btn-cyber-primary">
+                                <i class="fas fa-eye me-1"></i>Dossier
                             </a>
                         </td>
-                        {% else %}
-                        <td colspan="3" class="text-center text-muted">
-                            <i class="fas fa-circle-check text-success"></i> Available
-                        </td>
-                        {% endif %}
                     </tr>
+                    {% else %}
+                    <tr>
+                        <td>
+                            <span class="text-secondary font-monospace py-1 px-2">
+                                <i class="fas fa-clock me-1 opacity-50"></i>{{ format_time(slot) }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge-status-emerald font-monospace small">
+                                <i class="fas fa-circle-check me-1"></i>AVAILABLE
+                            </span>
+                        </td>
+                        <td colspan="2">
+                            <span class="text-secondary small font-monospace opacity-50">— Unreserved slot in telemetry pool —</span>
+                        </td>
+                        <td class="text-end">
+                            <span class="text-secondary small font-monospace opacity-50">STANDBY</span>
+                        </td>
+                    </tr>
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-
-        <div class="text-center mt-3">
-            <a href="{{ url_for('doctor.schedule', date=date) }}" class="btn btn-outline-primary">
-                <i class="fas fa-refresh me-1"></i>Refresh
-            </a>
-        </div>
     </div>
 </div>
-
-<style>
-.schedule-table td {
-    vertical-align: middle;
-}
-</style>
 {% endblock %}

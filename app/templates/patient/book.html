@@ -1,65 +1,94 @@
 {% extends "base/base.html" %}
 
-{% block title %}Book Appointment - MedTrack{% endblock %}
+{% block title %}Book Clinical Consultation - MedTrack{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow">
-            <div class="card-header">
-                <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Book New Appointment</h4>
+<div class="row justify-content-center py-2">
+    <div class="col-lg-8">
+        <!-- Header -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div>
+                <span class="badge-cyber mb-2">
+                    <span class="pulse-dot"></span> ZERO-LATENCY CLINICAL SCHEDULER
+                </span>
+                <h1 class="h2 fw-bold mb-1">Book <span class="text-cyan-gradient">Consultation</span></h1>
+                <p class="text-secondary small mb-0">Select your specialist physician and lock in a synchronized time-slot.</p>
             </div>
-            <div class="card-body">
-                <form method="POST" novalidate>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="doctor_id" class="form-label">Select Doctor <span class="text-danger">*</span></label>
-                            <select class="form-select {% if errors.doctor_id %}is-invalid{% endif %}" id="doctor_id" name="doctor_id" required onchange="loadAvailableSlots()">
-                                <option value="">Choose a doctor...</option>
-                                {% for doc in doctors %}
-                                {% set doc_user = user_model.get_by_id(doc.UserID) %}
-                                <option value="{{ doc.DoctorID }}" {% if form_data.doctor_id == doc.DoctorID %}selected{% endif %}>
-                                    Dr. {{ doc_user.Name if doc_user else 'Unknown' }} - {{ doc.Specialization }} ({{ doc.Experience }} yrs exp)
-                                </option>
-                                {% endfor %}
-                            </select>
-                            {% if errors.doctor_id %}
-                                <div class="invalid-feedback">{{ errors.doctor_id }}</div>
-                            {% endif %}
-                        </div>
+            <a href="{{ url_for('patient.dashboard') }}" class="btn-glass-pill">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Dashboard</span>
+            </a>
+        </div>
+
+        <div class="cyber-card p-4 p-md-5">
+            <div class="corner-bracket corner-tl"></div>
+            <div class="corner-bracket corner-tr"></div>
+            <div class="corner-bracket corner-bl"></div>
+            <div class="corner-bracket corner-br"></div>
+
+            <form method="POST" novalidate>
+                <div class="mb-4">
+                    <label for="doctor_id" class="form-label text-cyan small fw-bold text-uppercase">
+                        <i class="fas fa-user-md me-1"></i> 1. Select Specialist Physician <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-select {% if errors.doctor_id %}is-invalid{% endif %}" id="doctor_id" name="doctor_id" required onchange="loadAvailableSlots()">
+                        <option value="">-- Choose Assigned Physician --</option>
+                        {% for doc in doctors %}
+                        {% set doc_user = user_model.get_by_id(doc.UserID) %}
+                        <option value="{{ doc.DoctorID }}" {% if form_data.doctor_id == doc.DoctorID %}selected{% endif %}>
+                            Dr. {{ doc_user.Name if doc_user else 'Specialist' }} &bull; {{ doc.Specialization }} ({{ doc.Experience }} yrs exp)
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.doctor_id %}
+                        <div class="text-danger small mt-1">{{ errors.doctor_id }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <label for="date" class="form-label text-cyan small fw-bold text-uppercase">
+                            <i class="fas fa-calendar-day me-1"></i> 2. Consultation Date <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" class="form-control {% if errors.date %}is-invalid{% endif %}" id="date" name="date" value="{{ form_data.date or '' }}" required min="{{ today }}" onchange="loadAvailableSlots()">
+                        {% if errors.date %}
+                            <div class="text-danger small mt-1">{{ errors.date }}</div>
+                        {% endif %}
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="date" class="form-label">Appointment Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control {% if errors.date %}is-invalid{% endif %}" id="date" name="date" value="{{ form_data.date or '' }}" required min="{{ today }}" onchange="loadAvailableSlots()">
-                            {% if errors.date %}
-                                <div class="invalid-feedback">{{ errors.date }}</div>
-                            {% endif %}
+                    <div class="col-md-6">
+                        <label for="time" class="form-label text-cyan small fw-bold text-uppercase">
+                            <i class="fas fa-clock me-1"></i> 3. Synchronized Time Slot <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select {% if errors.time %}is-invalid{% endif %}" id="time" name="time" required disabled>
+                            <option value="">Select date and doctor first</option>
+                        </select>
+                        {% if errors.time %}
+                            <div class="text-danger small mt-1">{{ errors.time }}</div>
+                        {% endif %}
+                        <div id="slots-loading" class="text-cyan small mt-2" style="display: none;">
+                            <span class="pulse-dot me-1"></span> Interrogating DynamoDB slots...
                         </div>
                     </div>
+                </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="time" class="form-label">Time Slot <span class="text-danger">*</span></label>
-                            <select class="form-select {% if errors.time %}is-invalid{% endif %}" id="time" name="time" required disabled>
-                                <option value="">Select a date and doctor first</option>
-                            </select>
-                            {% if errors.time %}
-                                <div class="invalid-feedback">{{ errors.time }}</div>
-                            {% endif %}
-                            <div id="slots-loading" class="text-muted small" style="display: none;">Loading available slots...</div>
-                        </div>
+                <!-- Live Information HUD -->
+                <div class="p-3 rounded-3 mb-4 d-flex align-items-center gap-3" style="background: rgba(5, 11, 24, 0.7); border: 1px dashed rgba(0, 229, 255, 0.25);">
+                    <i class="fas fa-broadcast-tower text-cyan fs-4"></i>
+                    <div class="small">
+                        <div class="text-white fw-bold">Instant SNS Confirmation Broadcast</div>
+                        <div class="text-secondary">Upon booking, confirmation alerts will automatically dispatch to your registered email and SMS phone.</div>
                     </div>
+                </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-calendar-check me-1"></i>Book Appointment
-                        </button>
-                        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
-                    </div>
-                </form>
-            </div>
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn-cyan-glow">
+                        <i class="fas fa-lock"></i>
+                        <span>Confirm &amp; Allocate Encrypted Slot</span>
+                    </button>
+                    <a href="{{ url_for('patient.dashboard') }}" class="btn-glass-pill">Abort</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -76,28 +105,32 @@ async function loadAvailableSlots() {
 
     if (!doctorId || !date) {
         timeSelect.disabled = true;
-        timeSelect.innerHTML = '<option value="">Select a date and doctor first</option>';
+        timeSelect.innerHTML = '<option value="">Select date and doctor first</option>';
         return;
     }
 
     timeSelect.disabled = true;
-    timeSelect.innerHTML = '<option value="">Loading...</option>';
+    timeSelect.innerHTML = '<option value="">Loading synchronized slots...</option>';
     loadingDiv.style.display = 'block';
 
     try {
         const response = await fetch(`/patient/api/available-slots?doctor_id=${doctorId}&date=${date}`);
         const data = await response.json();
 
-        timeSelect.innerHTML = '<option value="">Choose a time slot...</option>';
-        data.slots.forEach(slot => {
-            const option = document.createElement('option');
-            option.value = slot;
-            option.textContent = formatTime(slot);
-            timeSelect.appendChild(option);
-        });
-        timeSelect.disabled = false;
+        timeSelect.innerHTML = '<option value="">-- Choose open time-slot --</option>';
+        if (data.slots && data.slots.length > 0) {
+            data.slots.forEach(slot => {
+                const option = document.createElement('option');
+                option.value = slot;
+                option.textContent = formatTime(slot);
+                timeSelect.appendChild(option);
+            });
+            timeSelect.disabled = false;
+        } else {
+            timeSelect.innerHTML = '<option value="">No slots remaining for this date</option>';
+        }
     } catch (error) {
-        timeSelect.innerHTML = '<option value="">Error loading slots</option>';
+        timeSelect.innerHTML = '<option value="">Telemetry query failure</option>';
         console.error('Error loading slots:', error);
     } finally {
         loadingDiv.style.display = 'none';

@@ -1,18 +1,33 @@
 {% extends "base/base.html" %}
 
-{% block title %}Page Not Found - MedTrack{% endblock %}
+{% block title %}Signal Lost (404) - MedTrack{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 text-center">
-        <div class="card">
-            <div class="card-body py-5">
-                <i class="fas fa-exclamation-triangle fa-5x text-warning mb-3"></i>
-                <h1 class="display-1">404</h1>
-                <h3>Page Not Found</h3>
-                <p class="text-muted">The page you're looking for doesn't exist or has been moved.</p>
-                <a href="{{ url_for('auth.dashboard') }}" class="btn btn-primary mt-3">
-                    <i class="fas fa-home me-2"></i>Go to Dashboard
+<div class="row justify-content-center py-5">
+    <div class="col-md-7 col-lg-6 text-center">
+        <div class="cyber-card p-5">
+            <div class="corner-bracket corner-tl"></div>
+            <div class="corner-bracket corner-br"></div>
+            
+            <div class="mb-3 text-warning">
+                <i class="fas fa-satellite-dish fa-4x brand-icon-pulse"></i>
+            </div>
+            
+            <span class="badge-amber mb-2">SIGNAL INTERRUPTED &bull; 404 CODE</span>
+            <h1 class="display-3 font-mono fw-bold text-cyan-gradient my-2">404</h1>
+            <h3 class="fw-bold text-white mb-2">Telemetry Node Not Found</h3>
+            <p class="text-secondary small mb-4">
+                The requested clinical coordinates or decentralized node does not exist in the routing mesh.
+            </p>
+            
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('index') }}" class="btn-cyan-glow">
+                    <i class="fas fa-home"></i>
+                    <span>Return to Core Hub</span>
+                </a>
+                <a href="{{ url_for('auth.dashboard') }}" class="btn-glass-pill">
+                    <i class="fas fa-columns text-info"></i>
+                    <span>Access Dashboard</span>
                 </a>
             </div>
         </div>
