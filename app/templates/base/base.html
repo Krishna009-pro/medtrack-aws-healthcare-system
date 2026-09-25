@@ -1,214 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}MedTrack - Healthcare Management System{% endblock %}</title>
+    <title>{% block title %}MedTrack - Next-Gen Cloud Healthcare{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
-    {% if session.user_id %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url_for('auth.dashboard') }}">
-                <i class="fas fa-heartbeat me-2"></i>MedTrack
+    <!-- Top Cyber Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-cyber">
+        <div class="container-fluid px-lg-4">
+            <a class="navbar-brand-cyber" href="{{ url_for('index') }}">
+                <i class="fas fa-heartbeat brand-icon-pulse fs-4"></i>
+                <span>MedTrack</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+            
+            <button class="navbar-toggler border-0 text-light shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCyberContent">
+                <i class="fas fa-bars fs-5"></i>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+
+            <div class="collapse navbar-collapse" id="navbarCyberContent">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 align-items-lg-center">
                     {% if session.role == 'Patient' %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('patient.dashboard') }}">
-                            <i class="fas fa-home me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('patient.appointments') }}">
-                            <i class="fas fa-calendar-alt me-1"></i>Appointments
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('patient.book_appointment') }}">
-                            <i class="fas fa-plus-circle me-1"></i>Book Appointment
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('patient.medical_history') }}">
-                            <i class="fas fa-file-medical me-1"></i>Medical History
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('patient.doctors_list') }}">
-                            <i class="fas fa-user-md me-1"></i>Doctors
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('patient.notifications') }}">
-                            <i class="fas fa-bell me-1"></i>Notifications
-                        </a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('patient.dashboard') }}">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('patient.appointments') }}">Appointments</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber active" href="{{ url_for('index') }}">Telemetry</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('patient.medical_history') }}">Medical Records</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('patient.doctors_list') }}">Specialists</a></li>
                     {% elif session.role == 'Doctor' %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('doctor.dashboard') }}">
-                            <i class="fas fa-home me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('doctor.appointments') }}">
-                            <i class="fas fa-calendar-alt me-1"></i>Appointments
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('doctor.patients_list') }}">
-                            <i class="fas fa-users me-1"></i>Patients
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('doctor.diagnoses') }}">
-                            <i class="fas fa-file-medical me-1"></i>Diagnoses
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('doctor.schedule') }}">
-                            <i class="fas fa-calendar-day me-1"></i>Schedule
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('doctor.notifications') }}">
-                            <i class="fas fa-bell me-1"></i>Notifications
-                        </a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('doctor.dashboard') }}">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('doctor.appointments') }}">Appointments</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber active" href="{{ url_for('index') }}">Telemetry</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('doctor.patients_list') }}">Patients</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('doctor.diagnoses') }}">Diagnoses</a></li>
                     {% elif session.role == 'Admin' %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
-                            <i class="fas fa-home me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.users') }}">
-                            <i class="fas fa-users me-1"></i>Users
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.appointments') }}">
-                            <i class="fas fa-calendar-alt me-1"></i>Appointments
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.diagnoses') }}">
-                            <i class="fas fa-file-medical me-1"></i>Diagnoses
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.notifications') }}">
-                            <i class="fas fa-bell me-1"></i>Notifications
-                        </a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('admin.users') }}">Users</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber active" href="{{ url_for('index') }}">Telemetry</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('admin.appointments') }}">Appointments</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('admin.diagnoses') }}">Diagnoses</a></li>
+                    {% else %}
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('login') }}">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('login') }}">Patients</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber active" href="{{ url_for('index') }}">Telemetry</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('about') }}">Analytics</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-cyber" href="{{ url_for('about') }}">Cloud Sync</a></li>
                     {% endif %}
                 </ul>
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item me-2">
-                        {% if app_mode == 'local' %}
-                        <span class="badge bg-warning text-dark" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Running in Local Mode. Add AWS credentials in .env to switch to AWS automatically.">
-                            <i class="fas fa-laptop-code me-1"></i>Local Mode
-                        </span>
-                        {% else %}
-                        <span class="badge bg-success" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Connected to AWS DynamoDB &amp; SNS">
-                            <i class="fab fa-aws me-1"></i>AWS Mode
-                        </span>
-                        {% endif %}
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle me-1"></i>{{ session.name }}
-                            <span class="badge bg-light text-primary ms-1">{{ session.role }}</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ url_for('about') }}">
-                                <i class="fas fa-info-circle me-2"></i>About MedTrack
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('contact_us') }}">
-                                <i class="fas fa-envelope me-2"></i>Contact Support
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                <i class="fas fa-sign-out-alt me-2 text-danger"></i>Logout
-                            </a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    {% else %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
-                <i class="fas fa-heartbeat me-2"></i>MedTrack
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarUnauthNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarUnauthNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-home me-1"></i>Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('about') }}"><i class="fas fa-info-circle me-1"></i>About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('contact_us') }}"><i class="fas fa-envelope me-1"></i>Contact</a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center gap-2">
+
+                <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
+                    <!-- Live Node Pill Badge -->
                     {% if app_mode == 'local' %}
-                    <span class="badge bg-warning text-dark" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Running in Local Mode. Add AWS credentials in .env to switch to AWS automatically.">
-                        <i class="fas fa-laptop-code me-1"></i>Local Mode
+                    <span class="pill-node-status" title="Running in Local In-Memory Mode. Set AWS credentials in .env to switch automatically.">
+                        <span class="pulse-dot"></span>
+                        <span>Live Node: Local Mode</span>
                     </span>
                     {% else %}
-                    <span class="badge bg-success" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Connected to AWS DynamoDB &amp; SNS">
-                        <i class="fab fa-aws me-1"></i>AWS Mode
+                    <span class="pill-node-status" title="Connected to AWS DynamoDB &amp; SNS">
+                        <span class="pulse-dot"></span>
+                        <span>Live Node: AWS Mode (99.9%)</span>
                     </span>
                     {% endif %}
-                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm ms-2"><i class="fas fa-sign-in-alt me-1"></i>Sign In</a>
-                    <a href="{{ url_for('signup') }}" class="btn btn-light btn-sm text-primary fw-semibold"><i class="fas fa-user-plus me-1"></i>Register</a>
+
+                    <!-- Notification Bell & Settings -->
+                    <a href="{{ url_for('about') }}" class="text-secondary text-decoration-none px-1" title="System Settings">
+                        <i class="fas fa-bell"></i>
+                    </a>
+                    <a href="{{ url_for('contact_us') }}" class="text-secondary text-decoration-none px-1" title="Support &amp; Infrastructure">
+                        <i class="fas fa-cog"></i>
+                    </a>
+
+                    <!-- Action Button -->
+                    {% if session.user_id %}
+                        {% if session.role == 'Patient' %}
+                        <a href="{{ url_for('patient.book_appointment') }}" class="btn-cyan-glow">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Book Appointment</span>
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('auth.dashboard') }}" class="btn-cyan-glow">
+                            <i class="fas fa-th-large"></i>
+                            <span>{{ session.role }} Portal</span>
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.logout') }}" class="btn-glass-pill py-2 px-3" title="Sign Out">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('patient.book_appointment') if session.user_id else url_for('login') }}" class="btn-cyan-glow">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Book Appointment</span>
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn-glass-pill py-2 px-3">
+                            <span>Sign In</span>
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </nav>
-    {% endif %}
 
-    <main class="container py-4">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="mb-3">
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+    <!-- Main Content Area -->
+    <main class="py-4">
+        <div class="container-fluid px-lg-5">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-4">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show cyber-card border-{{ category }} p-3 mb-2" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>{{ message }}
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
 
-        {% block content %}{% endblock %}
+            {% block content %}{% endblock %}
+        </div>
     </main>
 
-    <footer class="bg-light py-3 mt-5">
-        <div class="container text-center text-muted">
-            <small>&copy; 2026 MedTrack - Healthcare Management System &bull; 
-                {% if app_mode == 'local' %}
-                <span class="text-secondary fw-semibold"><i class="fas fa-laptop-code text-warning me-1"></i>Local Storage &amp; Mock SNS</span> (Auto-switches to AWS when credentials are added)
-                {% else %}
-                <span class="text-success fw-semibold"><i class="fab fa-aws me-1"></i>Connected to AWS Services</span>
-                {% endif %}
-            </small>
+    <!-- Cyber Footer matching reference -->
+    <footer class="footer-cyber mt-auto">
+        <div class="container-fluid px-lg-5">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fas fa-heartbeat text-info"></i>
+                    <span class="text-white fw-bold">MedTrack</span>
+                    <span class="text-muted ms-2">&copy; 2026 MedTrack Telemetry Systems. Cloud Healthcare Platform.</span>
+                </div>
+                <div class="d-flex flex-wrap align-items-center justify-content-center">
+                    <a href="{{ url_for('about') }}">Architecture SLA</a>
+                    <a href="{{ url_for('about') }}">HIPAA Compliance</a>
+                    <a href="{{ url_for('contact_us') }}">API Documentation</a>
+                    <a href="{{ url_for('contact_us') }}">Security Status</a>
+                </div>
+            </div>
         </div>
     </footer>
 
