@@ -1,0 +1,69 @@
+{% extends "base/base.html" %}
+
+{% block title %}Notifications - MedTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fas fa-bell text-primary me-2"></i>Notifications & Alerts</h2>
+        <p class="text-secondary mb-0">Updates on your appointment bookings and medical reports</p>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        {% if notifications %}
+        <div class="list-group list-group-flush">
+            {% for notif in notifications %}
+            <div class="list-group-item px-0 py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 {% if not notif.Read %}bg-light rounded p-3 mb-2 border{% endif %}">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        {% if not notif.Read %}
+                        <span class="badge bg-primary">NEW</span>
+                        {% else %}
+                        <span class="badge bg-secondary">READ</span>
+                        {% endif %}
+                        <span class="text-secondary small font-monospace"><i class="fas fa-clock me-1"></i>{{ notif.Timestamp[:16].replace('T', ' ') }}</span>
+                    </div>
+                    <p class="mb-0 text-dark">{{ notif.Message }}</p>
+                </div>
+
+                {% if not notif.Read %}
+                <form method="POST" action="{{ url_for('patient.mark_notification_read', notification_id=notif.NotificationID) }}">
+                    <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">
+                        <i class="fas fa-check me-1"></i>Mark Read
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if pagination.pages > 1 %}
+        <nav class="mt-4 pt-3 border-top">
+            <ul class="pagination justify-content-center mb-0">
+                {% if pagination.has_prev %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('patient.notifications', page=pagination.page-1) }}">Previous</a></li>
+                {% endif %}
+                {% for p in range(1, pagination.pages + 1) %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('patient.notifications', page=p) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                {% if pagination.has_next %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('patient.notifications', page=pagination.page+1) }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-bell-slash text-secondary fs-1 mb-2"></i>
+            <h5 class="fw-bold text-dark">No Notifications</h5>
+            <p class="text-secondary mb-0">You don't have any notifications at the moment.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

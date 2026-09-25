@@ -1,0 +1,70 @@
+{% extends "base/base.html" %}
+
+{% block title %}Welcome to MedTrack - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="py-5">
+    <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill mb-3">
+                <i class="fas fa-heart-pulse me-1"></i> Cloud Healthcare Platform
+            </span>
+            <h1 class="display-4 fw-bold text-dark mb-3">
+                Welcome to MedTrack
+            </h1>
+            <p class="lead text-secondary mb-4">
+                Next-Generation cloud healthcare system connecting patients, clinicians, and administrators with zero-latency appointments and automated notifications.
+            </p>
+            <div class="d-flex flex-wrap gap-3">
+                <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg px-4">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg px-4">
+                    <i class="fas fa-right-to-bracket me-2"></i>Sign In
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <div class="card p-3 h-100">
+                        <div class="d-inline-flex p-3 rounded bg-primary-subtle text-primary mb-3" style="width: fit-content;">
+                            <i class="fas fa-calendar-check fs-4"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Easy Scheduling</h5>
+                        <p class="text-secondary small mb-0">Book appointments with certified specialists in just a few clicks.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card p-3 h-100">
+                        <div class="d-inline-flex p-3 rounded bg-success-subtle text-success mb-3" style="width: fit-content;">
+                            <i class="fas fa-file-medical fs-4"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Electronic Health Records</h5>
+                        <p class="text-secondary small mb-0">Secure access to clinical diagnoses, medical history, and prescriptions.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card p-3 h-100">
+                        <div class="d-inline-flex p-3 rounded bg-info-subtle text-info mb-3" style="width: fit-content;">
+                            <i class="fas fa-bell fs-4"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Instant Notifications</h5>
+                        <p class="text-secondary small mb-0">Automated SMS and email updates on bookings and diagnosis reports via AWS SNS.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card p-3 h-100">
+                        <div class="d-inline-flex p-3 rounded bg-warning-subtle text-warning mb-3" style="width: fit-content;">
+                            <i class="fas fa-shield-halved fs-4"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Enterprise Security</h5>
+                        <p class="text-secondary small mb-0">Role-based access control, cryptographic password hashing, and audit trails.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

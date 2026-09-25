@@ -1,0 +1,56 @@
+{% extends "base/base.html" %}
+
+{% block title %}Contact Us - MedTrack{% endblock %}
+
+{% block content %}
+<div class="py-4">
+    <div class="mb-4">
+        <h1 class="fw-bold mb-2">Contact MedTrack Support</h1>
+        <p class="text-secondary lead">Have questions or need assistance? Reach out to our technical and clinical support teams.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card p-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-envelope me-2 text-primary"></i>Send a Message</h5>
+                <form onsubmit="event.preventDefault(); alert('Message sent successfully! We will get back to you shortly.'); this.reset();">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" required placeholder="John Doe">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" required placeholder="john@example.com">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Subject</label>
+                            <input type="text" class="form-control" required placeholder="Question about appointments or platform">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-control" rows="5" required placeholder="Describe your question or issue in detail..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-paper-plane me-1"></i>Send Message
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card p-4 mb-3">
+                <h5 class="fw-bold mb-3"><i class="fas fa-headset me-2 text-primary"></i>Support Information</h5>
+                <p class="mb-2"><strong>Email:</strong> support@medtrack.com</p>
+                <p class="mb-2"><strong>Emergency Line:</strong> +1 (800) 555-MEDS</p>
+                <p class="mb-2"><strong>Operating Hours:</strong> 24/7 Mon - Sun</p>
+                <hr>
+                <p class="text-secondary small mb-0">For medical emergencies, please call your local emergency services (911 / 112) immediately.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

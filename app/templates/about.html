@@ -1,0 +1,53 @@
+{% extends "base/base.html" %}
+
+{% block title %}About MedTrack - Cloud Healthcare Architecture{% endblock %}
+
+{% block content %}
+<div class="py-4">
+    <div class="mb-4">
+        <h1 class="fw-bold mb-2">About MedTrack</h1>
+        <p class="text-secondary lead">
+            MedTrack is a modern cloud healthcare system designed to deliver fast, secure, and reliable clinical workflow management.
+        </p>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card p-3 h-100">
+                <div class="d-inline-flex p-3 rounded bg-primary-subtle text-primary mb-2" style="width: fit-content;">
+                    <i class="fab fa-python fs-4"></i>
+                </div>
+                <h5 class="fw-bold">Flask Application</h5>
+                <p class="text-secondary small mb-0">Modular application factory with Blueprints, session handling, and role security.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card p-3 h-100">
+                <div class="d-inline-flex p-3 rounded bg-warning-subtle text-warning mb-2" style="width: fit-content;">
+                    <i class="fab fa-aws fs-4"></i>
+                </div>
+                <h5 class="fw-bold">Amazon DynamoDB</h5>
+                <p class="text-secondary small mb-0">High-throughput NoSQL storage for users, appointments, doctors, and health records.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card p-3 h-100">
+                <div class="d-inline-flex p-3 rounded bg-success-subtle text-success mb-2" style="width: fit-content;">
+                    <i class="fas fa-tower-broadcast fs-4"></i>
+                </div>
+                <h5 class="fw-bold">Amazon SNS</h5>
+                <p class="text-secondary small mb-0">Automated event-driven notifications dispatched to clinicians and patients.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card p-3 h-100">
+                <div class="d-inline-flex p-3 rounded bg-info-subtle text-info mb-2" style="width: fit-content;">
+                    <i class="fas fa-server fs-4"></i>
+                </div>
+                <h5 class="fw-bold">Dual Storage Mode</h5>
+                <p class="text-secondary small mb-0">Seamless transition between offline Local JSON storage and live AWS Cloud mode.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,11 +1,11 @@
 from datetime import datetime
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from app.models import (
     user_model, doctor_model, patient_model, appointment_model,
     diagnosis_model, notification_model
 )
 from app.utils.auth import login_required, doctor_required, get_current_user
-from app.utils.helpers import paginate_items, generate_time_slots
+from app.utils.helpers import format_date, format_time, paginate_items, generate_time_slots
 from app.services.sns import sns_service
 
 doctor_bp = Blueprint('doctor', __name__, url_prefix='/doctor')
@@ -17,7 +17,9 @@ doctor_bp = Blueprint('doctor', __name__, url_prefix='/doctor')
 def dashboard():
     user = get_current_user()
     if not user:
-        return jsonify({'error': 'Unauthorized'}), 401
+        session.clear()
+        return redirect(url_for('auth.login'))
+
     doctor = user.get('doctor_profile')
     appointments = []
     today_appointments = []
@@ -31,13 +33,14 @@ def dashboard():
         upcoming.sort(key=lambda x: (x.get('Date', ''), x.get('Time', '')))
         notifications = notification_model.get_by_user(user['UserID'], limit=5)
 
-    return jsonify({
-        'user': user,
-        'doctor': doctor,
-        'today_appointments': today_appointments[:5],
-        'upcoming_appointments': upcoming[:5],
-        'notifications': notifications
-    }), 200
+    return render_template('doctor/dashboard.html',
+                           user=user,
+                           doctor=doctor,
+                           today_appointments=today_appointments[:5],
+                           upcoming_appointments=upcoming[:5],
+                           notifications=notifications,
+                           format_date=format_date,
+                           format_time=format_time)
 
 
 @doctor_bp.route('/appointments')
@@ -45,7 +48,11 @@ def dashboard():
 @doctor_required
 def appointments():
     user = get_current_user()
-    doctor = user.get('doctor_profile') if user else None
+    if not user:
+        session.clear()
+        return redirect(url_for('auth.login'))
+
+    doctor = user.get('doctor_profile')
     page = request.args.get('page', 1, type=int)
     status_filter = request.args.get('status', '')
 
@@ -58,12 +65,14 @@ def appointments():
 
     pagination = paginate_items(all_appointments, page)
 
-    return jsonify({
-        'doctor_id': doctor['DoctorID'] if doctor else None,
-        'appointments': pagination['items'],
-        'pagination': pagination,
-        'status_filter': status_filter
-    }), 200
+    return render_template('doctor/appointments.html',
+                           user=user,
+                           doctor=doctor,
+                           appointments=pagination['items'],
+                           pagination=pagination,
+                           status_filter=status_filter,
+                           format_date=format_date,
+                           format_time=format_time)
 
 
 @doctor_bp.route('/appointment/<appointment_id>')
@@ -71,25 +80,33 @@ def appointments():
 @doctor_required
 def appointment_detail(appointment_id):
     user = get_current_user()
-    doctor = user.get('doctor_profile') if user else None
+    if not user:
+        session.clear()
+        return redirect(url_for('auth.login'))
+
+    doctor = user.get('doctor_profile')
     appointment = appointment_model.get_by_id(appointment_id)
 
     if not appointment or not doctor or appointment.get('DoctorID') != doctor['DoctorID']:
-        return jsonify({'error': 'Appointment not found'}), 404
+        flash('Appointment not found', 'danger')
+        return redirect(url_for('doctor.appointments'))
 
     patient = patient_model.get_by_id(appointment.get('PatientID'))
     patient_user = user_model.get_by_id(patient['UserID']) if patient else None
     diagnosis = diagnosis_model.get_by_appointment(appointment_id)
 
-    return jsonify({
-        'appointment': appointment,
-        'patient': patient,
-        'patient_user': patient_user,
-        'diagnosis': diagnosis
-    }), 200
+    return render_template('doctor/appointment_detail.html',
+                           user=user,
+                           doctor=doctor,
+                           appointment=appointment,
+                           patient=patient,
+                           patient_user=patient_user,
+                           diagnosis=diagnosis,
+                           format_date=format_date,
+                           format_time=format_time)
 
 
-@doctor_bp.route('/appointment/<appointment_id>/update-status', methods=['POST', 'PUT'])
+@doctor_bp.route('/appointment/<appointment_id>/update-status', methods=['POST'])
 @login_required
 @doctor_required
 def update_appointment_status(appointment_id):
@@ -98,12 +115,13 @@ def update_appointment_status(appointment_id):
     appointment = appointment_model.get_by_id(appointment_id)
 
     if not appointment or not doctor or appointment.get('DoctorID') != doctor['DoctorID']:
-        return jsonify({'error': 'Appointment not found'}), 404
+        flash('Appointment not found', 'danger')
+        return redirect(url_for('doctor.appointments'))
 
-    payload = request.get_json(silent=True) or request.form or {}
-    new_status = payload.get('status')
+    new_status = request.form.get('status')
     if new_status not in ['Pending', 'Confirmed', 'Completed', 'Cancelled']:
-        return jsonify({'error': 'Invalid status'}), 400
+        flash('Invalid status', 'danger')
+        return redirect(url_for('doctor.appointment_detail', appointment_id=appointment_id))
 
     appointment_model.update_status(appointment_id, new_status)
 
@@ -125,11 +143,8 @@ def update_appointment_status(appointment_id):
                 'cancellation'
             )
 
-    return jsonify({
-        'success': True,
-        'message': f'Appointment status updated to {new_status}',
-        'status': new_status
-    }), 200
+    flash(f'Appointment status updated to {new_status}', 'success')
+    return redirect(url_for('doctor.appointment_detail', appointment_id=appointment_id))
 
 
 @doctor_bp.route('/appointment/<appointment_id>/diagnosis', methods=['GET', 'POST'])
@@ -137,48 +152,60 @@ def update_appointment_status(appointment_id):
 @doctor_required
 def create_diagnosis(appointment_id):
     user = get_current_user()
-    doctor = user.get('doctor_profile') if user else None
+    if not user:
+        session.clear()
+        return redirect(url_for('auth.login'))
+
+    doctor = user.get('doctor_profile')
     appointment = appointment_model.get_by_id(appointment_id)
 
     if not appointment or not doctor or appointment.get('DoctorID') != doctor['DoctorID']:
-        return jsonify({'error': 'Appointment not found'}), 404
-
-    if request.method == 'GET':
-        existing = diagnosis_model.get_by_appointment(appointment_id)
-        return jsonify({
-            'appointment': appointment,
-            'existing_diagnosis': existing
-        }), 200
-
-    payload = request.get_json(silent=True) or request.form or {}
-    report = payload.get('report', '').strip()
-    if not report:
-        return jsonify({'error': 'Diagnosis report is required'}), 400
-
-    diagnosis = diagnosis_model.create_diagnosis(
-        appointment_id, doctor['DoctorID'], appointment['PatientID'], report
-    )
-    appointment_model.update_status(appointment_id, 'Completed')
+        flash('Appointment not found', 'danger')
+        return redirect(url_for('doctor.appointments'))
 
     patient = patient_model.get_by_id(appointment.get('PatientID'))
     patient_user = user_model.get_by_id(patient['UserID']) if patient else None
 
-    if patient_user:
-        sns_service.send_diagnosis_notification(
-            patient_user['Email'], patient_user.get('Phone', ''),
-            {'doctor_name': user['Name'], 'date': diagnosis['Date'], 'appointment_date': appointment['Date']}
-        )
-    sns_service.send_doctor_notification(
-        user['Email'], user.get('Phone', ''),
-        f'Diagnosis submitted for patient {patient_user["Name"] if patient_user else "Unknown"}',
-        'Diagnosis Submitted'
-    )
+    if request.method == 'POST':
+        report = request.form.get('report', '').strip()
+        if not report:
+            flash('Diagnosis report is required', 'danger')
+            return render_template('doctor/create_diagnosis.html',
+                                   user=user,
+                                   doctor=doctor,
+                                   appointment=appointment,
+                                   patient=patient,
+                                   patient_user=patient_user,
+                                   format_date=format_date,
+                                   format_time=format_time)
 
-    return jsonify({
-        'success': True,
-        'message': 'Diagnosis submitted successfully',
-        'diagnosis': diagnosis
-    }), 201
+        diagnosis = diagnosis_model.create_diagnosis(
+            appointment_id, doctor['DoctorID'], appointment['PatientID'], report
+        )
+        appointment_model.update_status(appointment_id, 'Completed')
+
+        if patient_user:
+            sns_service.send_diagnosis_notification(
+                patient_user['Email'], patient_user.get('Phone', ''),
+                {'doctor_name': user['Name'], 'date': diagnosis['Date'], 'appointment_date': appointment['Date']}
+            )
+        sns_service.send_doctor_notification(
+            user['Email'], user.get('Phone', ''),
+            f'Diagnosis submitted for patient {patient_user["Name"] if patient_user else "Unknown"}',
+            'Diagnosis Submitted'
+        )
+
+        flash('Diagnosis submitted successfully', 'success')
+        return redirect(url_for('doctor.appointment_detail', appointment_id=appointment_id))
+
+    return render_template('doctor/create_diagnosis.html',
+                           user=user,
+                           doctor=doctor,
+                           appointment=appointment,
+                           patient=patient,
+                           patient_user=patient_user,
+                           format_date=format_date,
+                           format_time=format_time)
 
 
 @doctor_bp.route('/patients')
@@ -186,7 +213,11 @@ def create_diagnosis(appointment_id):
 @doctor_required
 def patients_list():
     user = get_current_user()
-    doctor = user.get('doctor_profile') if user else None
+    if not user:
+        session.clear()
+        return redirect(url_for('auth.login'))
+
+    doctor = user.get('doctor_profile')
     appointments = appointment_model.get_by_doctor(doctor['DoctorID']) if doctor else []
 
     patient_ids = list(set([a['PatientID'] for a in appointments]))
@@ -198,10 +229,10 @@ def patients_list():
             if patient_user:
                 patients.append({**patient, 'user': patient_user})
 
-    return jsonify({
-        'patients': patients,
-        'total': len(patients)
-    }), 200
+    return render_template('doctor/patients.html',
+                           user=user,
+                           doctor=doctor,
+                           patients=patients)
 
 
 @doctor_bp.route('/patient/<patient_id>/history')
@@ -209,11 +240,16 @@ def patients_list():
 @doctor_required
 def patient_history(patient_id):
     user = get_current_user()
-    doctor = user.get('doctor_profile') if user else None
+    if not user:
+        session.clear()
+        return redirect(url_for('auth.login'))
+
+    doctor = user.get('doctor_profile')
     patient = patient_model.get_by_id(patient_id)
 
     if not patient:
-        return jsonify({'error': 'Patient not found'}), 404
+        flash('Patient not found', 'danger')
+        return redirect(url_for('doctor.patients_list'))
 
     patient_user = user_model.get_by_id(patient['UserID'])
     diagnoses = diagnosis_model.get_by_patient(patient_id)
@@ -224,12 +260,15 @@ def patient_history(patient_id):
         appointments = [a for a in appointments if a.get('DoctorID') == doctor['DoctorID']]
     appointments.sort(key=lambda x: (x.get('Date', ''), x.get('Time', '')), reverse=True)
 
-    return jsonify({
-        'patient': patient,
-        'patient_user': patient_user,
-        'diagnoses': diagnoses,
-        'appointments': appointments
-    }), 200
+    return render_template('doctor/patient_history.html',
+                           user=user,
+                           doctor=doctor,
+                           patient=patient,
+                           patient_user=patient_user,
+                           diagnoses=diagnoses,
+                           appointments=appointments,
+                           format_date=format_date,
+                           format_time=format_time)
 
 
 @doctor_bp.route('/diagnoses')
@@ -237,7 +276,11 @@ def patient_history(patient_id):
 @doctor_required
 def diagnoses():
     user = get_current_user()
-    doctor = user.get('doctor_profile') if user else None
+    if not user:
+        session.clear()
+        return redirect(url_for('auth.login'))
+
+    doctor = user.get('doctor_profile')
     page = request.args.get('page', 1, type=int)
 
     all_diagnoses = []
@@ -247,10 +290,12 @@ def diagnoses():
 
     pagination = paginate_items(all_diagnoses, page)
 
-    return jsonify({
-        'diagnoses': pagination['items'],
-        'pagination': pagination
-    }), 200
+    return render_template('doctor/diagnoses.html',
+                           user=user,
+                           doctor=doctor,
+                           diagnoses=pagination['items'],
+                           pagination=pagination,
+                           format_date=format_date)
 
 
 @doctor_bp.route('/schedule')
@@ -258,7 +303,11 @@ def diagnoses():
 @doctor_required
 def schedule():
     user = get_current_user()
-    doctor = user.get('doctor_profile') if user else None
+    if not user:
+        session.clear()
+        return redirect(url_for('auth.login'))
+
+    doctor = user.get('doctor_profile')
     date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
 
     appointments = []
@@ -269,13 +318,15 @@ def schedule():
     all_slots = generate_time_slots()
     booked_slots = {a['Time']: a for a in appointments}
 
-    return jsonify({
-        'date': date,
-        'doctor_id': doctor['DoctorID'] if doctor else None,
-        'all_slots': all_slots,
-        'booked_slots': booked_slots,
-        'appointments': appointments
-    }), 200
+    return render_template('doctor/schedule.html',
+                           user=user,
+                           doctor=doctor,
+                           date=date,
+                           appointments=appointments,
+                           all_slots=all_slots,
+                           booked_slots=booked_slots,
+                           format_date=format_date,
+                           format_time=format_time)
 
 
 @doctor_bp.route('/notifications')
@@ -283,19 +334,25 @@ def schedule():
 @doctor_required
 def notifications():
     user = get_current_user()
+    if not user:
+        session.clear()
+        return redirect(url_for('auth.login'))
+
+    doctor = user.get('doctor_profile')
     page = request.args.get('page', 1, type=int)
     all_notifications = notification_model.get_by_user(user['UserID']) if user else []
     pagination = paginate_items(all_notifications, page)
 
-    return jsonify({
-        'notifications': pagination['items'],
-        'pagination': pagination
-    }), 200
+    return render_template('doctor/notifications.html',
+                           user=user,
+                           doctor=doctor,
+                           notifications=pagination['items'],
+                           pagination=pagination)
 
 
-@doctor_bp.route('/notification/<notification_id>/read', methods=['POST', 'PUT'])
+@doctor_bp.route('/notification/<notification_id>/read', methods=['POST'])
 @login_required
 @doctor_required
 def mark_notification_read(notification_id):
     notification_model.mark_as_read(notification_id)
-    return jsonify({'success': True, 'notification_id': notification_id, 'read': True}), 200
+    return redirect(url_for('doctor.notifications'))

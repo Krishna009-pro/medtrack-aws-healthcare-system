@@ -1,0 +1,147 @@
+{% extends "base/base.html" %}
+
+{% block title %}Patient History - MedTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">{{ patient_user.Name }} — Medical Record</h2>
+                <p class="text-secondary mb-0">Demographics, previous appointments, and diagnosis reports</p>
+            </div>
+            <a href="{{ url_for('doctor.patients_list') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back
+            </a>
+        </div>
+
+        <!-- Demographics -->
+        <div class="card p-4 shadow-sm mb-4">
+            <h5 class="fw-bold text-primary mb-3"><i class="fas fa-user me-2"></i>Patient Demographics</h5>
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <p class="mb-1 text-secondary small">FULL NAME</p>
+                    <p class="fw-semibold mb-0">{{ patient_user.Name }}</p>
+                </div>
+                <div class="col-sm-6">
+                    <p class="mb-1 text-secondary small">AGE</p>
+                    <p class="fw-semibold mb-0">{{ patient.Age ~ ' years' if patient.Age else 'N/A' }}</p>
+                </div>
+                <div class="col-sm-6">
+                    <p class="mb-1 text-secondary small">EMAIL</p>
+                    <p class="fw-semibold mb-0">{{ patient_user.Email }}</p>
+                </div>
+                <div class="col-sm-6">
+                    <p class="mb-1 text-secondary small">PHONE</p>
+                    <p class="fw-semibold mb-0">{{ patient_user.Phone or 'N/A' }}</p>
+                </div>
+            </div>
+
+            {% if patient.MedicalHistory %}
+            <hr class="my-3">
+            <p class="mb-1 text-secondary small">BASELINE MEDICAL HISTORY</p>
+            <div class="p-3 bg-light rounded small text-dark">
+                {{ patient.MedicalHistory }}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Diagnoses -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <span class="fw-bold"><i class="fas fa-file-medical me-2 text-primary"></i>Historical Diagnosis Reports</span>
+            </div>
+            <div class="card-body p-0">
+                {% if diagnoses %}
+                <div class="table-responsive">
+                    <table class="table table-simple">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Report Preview</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for diag in diagnoses %}
+                            <tr>
+                                <td class="fw-semibold">{{ format_date(diag.Date) }}</td>
+                                <td>{{ diag.Report|truncate(90) }}</td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#diagModal{{ diag.DiagnosisID }}">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <div class="modal fade" id="diagModal{{ diag.DiagnosisID }}" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title fw-bold">Diagnosis - {{ format_date(diag.Date) }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body p-4">
+                                            <div class="p-3 bg-light rounded" style="white-space: pre-wrap; line-height: 1.6;">{{ diag.Report }}</div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-secondary small p-3 mb-0 text-center">No diagnosis reports found for this patient.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Appointments with you -->
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <span class="fw-bold"><i class="fas fa-calendar-check me-2 text-primary"></i>Consultations With You</span>
+            </div>
+            <div class="card-body p-0">
+                {% if appointments %}
+                <div class="table-responsive">
+                    <table class="table table-simple">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for apt in appointments %}
+                            <tr>
+                                <td class="fw-semibold">{{ format_date(apt.Date) }}</td>
+                                <td>{{ format_time(apt.Time) }}</td>
+                                <td>
+                                    <span class="badge badge-status-{{ apt.Status|lower }} px-2 py-1">
+                                        {{ apt.Status }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('doctor.appointment_detail', appointment_id=apt.AppointmentID) }}" class="btn btn-sm btn-outline-primary">
+                                        Dossier
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-secondary small p-3 mb-0 text-center">No consultations recorded with you.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

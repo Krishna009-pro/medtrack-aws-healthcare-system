@@ -1,0 +1,126 @@
+{% extends "base/base.html" %}
+
+{% block title %}Create Account - MedTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-8 col-lg-6">
+        <div class="card p-4 shadow-sm">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex p-3 rounded-circle bg-primary-subtle text-primary mb-2">
+                    <i class="fas fa-user-plus fs-4"></i>
+                </div>
+                <h3 class="fw-bold">Create Account</h3>
+                <p class="text-secondary small">Register to start managing appointments and health records</p>
+            </div>
+
+            {% if errors %}
+                <div class="alert alert-danger py-2 small mb-3">
+                    <ul class="mb-0 ps-3">
+                        {% for err in errors.values() %}
+                            <li>{{ err }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <form method="POST">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="name" value="{{ form_data.get('name', '') }}" required placeholder="Jane Doe">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" name="email" value="{{ form_data.get('email', '') }}" required placeholder="jane@example.com">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" name="password" required placeholder="Min. 8 characters">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" name="confirm_password" required placeholder="Repeat password">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Account Role <span class="text-danger">*</span></label>
+                        <select class="form-select" name="role" id="roleSelect" onchange="toggleRoleFields()">
+                            <option value="Patient" {% if form_data.get('role') == 'Patient' %}selected{% endif %}>Patient</option>
+                            <option value="Doctor" {% if form_data.get('role') == 'Doctor' %}selected{% endif %}>Doctor</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" name="phone" value="{{ form_data.get('phone', '') }}" placeholder="+1-555-0100">
+                    </div>
+
+                    <!-- Doctor Specific Fields -->
+                    <div id="doctorFields" style="display: none;" class="col-12">
+                        <div class="p-3 bg-light rounded border">
+                            <h6 class="fw-bold text-primary mb-3"><i class="fas fa-stethoscope me-1"></i>Doctor Credentials</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Specialization</label>
+                                    <input type="text" class="form-control" name="specialization" value="{{ form_data.get('specialization', '') }}" placeholder="e.g. Cardiology, Neurology">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Years of Experience</label>
+                                    <input type="number" class="form-control" name="experience" min="0" value="{{ form_data.get('experience', 0) }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Patient Specific Fields -->
+                    <div id="patientFields" class="col-12">
+                        <div class="p-3 bg-light rounded border">
+                            <h6 class="fw-bold text-primary mb-3"><i class="fas fa-user-injured me-1"></i>Patient Profile</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Age</label>
+                                    <input type="number" class="form-control" name="age" min="0" max="130" value="{{ form_data.get('age', 30) }}">
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label">Medical History / Allergies</label>
+                                    <textarea class="form-control" name="medical_history" rows="2" placeholder="e.g. Penicillin allergy, Asthma">{{ form_data.get('medical_history', '') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                            <i class="fas fa-user-check me-2"></i>Register Account
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="text-center mt-4 pt-3 border-top">
+                <p class="text-secondary small mb-0">Already have an account? <a href="{{ url_for('login') }}" class="text-primary fw-semibold">Sign in here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleRoleFields() {
+    var role = document.getElementById('roleSelect').value;
+    var docFields = document.getElementById('doctorFields');
+    var patFields = document.getElementById('patientFields');
+    if (role === 'Doctor') {
+        docFields.style.display = 'block';
+        patFields.style.display = 'none';
+    } else {
+        docFields.style.display = 'none';
+        patFields.style.display = 'block';
+    }
+}
+document.addEventListener('DOMContentLoaded', toggleRoleFields);
+</script>
+{% endblock %}

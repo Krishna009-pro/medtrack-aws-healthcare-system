@@ -1,0 +1,69 @@
+{% extends "base/base.html" %}
+
+{% block title %}My Schedule - MedTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fas fa-clock text-primary me-2"></i>Daily Shift Schedule</h2>
+        <p class="text-secondary mb-0">Roster overview for <strong>{{ format_date(date) }}</strong></p>
+    </div>
+    <form method="GET" class="d-flex gap-2 align-items-center">
+        <label class="form-label mb-0 small text-secondary">Date:</label>
+        <input type="date" class="form-control form-control-sm" name="date" value="{{ date }}" style="width: auto;">
+        <button type="submit" class="btn btn-sm btn-primary">Load</button>
+        <a href="{{ url_for('doctor.schedule', date=date) }}" class="btn btn-sm btn-outline-secondary" title="Refresh">
+            <i class="fas fa-rotate"></i>
+        </a>
+    </form>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-simple">
+                <thead>
+                    <tr>
+                        <th style="width: 140px;">Slot Time</th>
+                        <th>Status</th>
+                        <th>Patient Identity</th>
+                        <th>Session State</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in all_slots %}
+                    {% if slot in booked_slots %}
+                    {% set apt = booked_slots[slot] %}
+                    {% set pat = patient_model.get_by_id(apt.PatientID) %}
+                    {% set pat_user = user_model.get_by_id(pat.UserID) if pat else None %}
+                    <tr class="table-light">
+                        <td class="fw-bold text-primary">{{ format_time(slot) }}</td>
+                        <td><span class="badge bg-primary">Booked</span></td>
+                        <td><strong>{{ pat_user.Name if pat_user else 'Unknown Patient' }}</strong></td>
+                        <td>
+                            <span class="badge badge-status-{{ apt.Status|lower }} px-2 py-1">
+                                {{ apt.Status }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('doctor.appointment_detail', appointment_id=apt.AppointmentID) }}" class="btn btn-sm btn-outline-primary">
+                                Examine
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td class="text-secondary">{{ format_time(slot) }}</td>
+                        <td><span class="badge bg-success-subtle text-success border border-success-subtle">Available</span></td>
+                        <td colspan="2" class="text-secondary small fst-italic">Open slot</td>
+                        <td class="text-end text-muted small">—</td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base/base.html" %}
+
+{% block title %}Appointment Details - MedTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Appointment Details</h2>
+                <p class="text-secondary mb-0">Consultation summary and clinical findings</p>
+            </div>
+            <a href="{{ url_for('patient.appointments') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back
+            </a>
+        </div>
+
+        <div class="card p-4 shadow-sm mb-4">
+            <div class="row g-4">
+                <div class="col-md-6 border-end">
+                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-clock me-1"></i>Session Info</h6>
+                    <p class="mb-2"><strong>Date:</strong> {{ format_date(appointment.Date) }}</p>
+                    <p class="mb-2"><strong>Time:</strong> {{ format_time(appointment.Time) }}</p>
+                    <p class="mb-0"><strong>Status:</strong>
+                        <span class="badge badge-status-{{ appointment.Status|lower }} px-2 py-1 ms-1">
+                            {{ appointment.Status }}
+                        </span>
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-user-md me-1"></i>Attending Specialist</h6>
+                    <p class="mb-2"><strong>Doctor:</strong> Dr. {{ doctor_user.Name if doctor_user else 'Specialist' }}</p>
+                    <p class="mb-2"><strong>Specialization:</strong> {{ doctor.Specialization if doctor else 'General' }}</p>
+                    <p class="mb-0"><strong>Contact:</strong> {{ doctor_user.Email if doctor_user else 'N/A' }}</p>
+                </div>
+            </div>
+
+            {% if appointment.Status in ['Pending', 'Confirmed'] %}
+            <hr class="my-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-secondary small">Need to reschedule or cancel this booking?</span>
+                <form method="POST" action="{{ url_for('patient.cancel_appointment', appointment_id=appointment.AppointmentID) }}" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-ban me-1"></i>Cancel Appointment
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Diagnostic Report if issued -->
+        {% if diagnosis %}
+        <div class="card p-4 shadow-sm border-success">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="fw-bold text-success mb-0">
+                    <i class="fas fa-file-medical me-2"></i>Clinical Diagnosis & Prescription
+                </h5>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                    {{ format_date(diagnosis.Date) }}
+                </span>
+            </div>
+            <div class="p-3 bg-light rounded" style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;">{{ diagnosis.Report }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

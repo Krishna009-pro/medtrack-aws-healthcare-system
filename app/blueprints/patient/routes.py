@@ -1,10 +1,10 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from app.models import (
     user_model, doctor_model, patient_model, appointment_model,
     diagnosis_model, notification_model
 )
 from app.utils.auth import login_required, patient_required, get_current_user
-from app.utils.helpers import get_available_slots, validate_appointment_data, paginate_items
+from app.utils.helpers import format_date, format_time, get_available_slots, validate_appointment_data, paginate_items
 from app.services.sns import sns_service
 
 patient_bp = Blueprint('patient', __name__, url_prefix='/patient')
@@ -16,7 +16,8 @@ patient_bp = Blueprint('patient', __name__, url_prefix='/patient')
 def dashboard():
     user = get_current_user()
     if not user:
-        return jsonify({'error': 'Unauthorized'}), 401
+        session.clear()
+        return redirect(url_for('auth.login'))
     patient = user.get('patient_profile')
     appointments = []
     notifications = []
@@ -26,12 +27,13 @@ def dashboard():
         appointments.sort(key=lambda x: (x.get('Date', ''), x.get('Time', '')), reverse=True)
         notifications = notification_model.get_by_user(user['UserID'], limit=5)
 
-    return jsonify({
-        'user': user,
-        'patient': patient,
-        'recent_appointments': appointments[:5],
-        'recent_notifications': notifications
-    }), 200
+    return render_template('patient/dashboard.html',
+                           user=user,
+                           patient=patient,
+                           appointments=appointments[:5],
+                           notifications=notifications,
+                           format_date=format_date,
+                           format_time=format_time)
 
 
 @patient_bp.route('/appointments')
@@ -49,11 +51,13 @@ def appointments():
 
     pagination = paginate_items(all_appointments, page)
 
-    return jsonify({
-        'patient_id': patient['PatientID'] if patient else None,
-        'appointments': pagination['items'],
-        'pagination': pagination
-    }), 200
+    return render_template('patient/appointments.html',
+                           user=user,
+                           patient=patient,
+                           appointments=pagination['items'],
+                           pagination=pagination,
+                           format_date=format_date,
+                           format_time=format_time)
 
 
 @patient_bp.route('/book', methods=['GET', 'POST'])
@@ -64,64 +68,64 @@ def book_appointment():
     patient = user.get('patient_profile') if user else None
     doctors = doctor_model.get_all_doctors()
 
-    if request.method == 'GET':
-        return jsonify({
-            'patient': patient,
-            'available_doctors': doctors,
-            'action': '/patient/book',
-            'method': 'POST',
-            'required_fields': ['doctor_id', 'date', 'time']
-        }), 200
+    if request.method == 'POST':
+        doctor_id = request.form.get('doctor_id')
+        date = request.form.get('date')
+        time = request.form.get('time')
 
-    payload = request.get_json(silent=True) or request.form or {}
-    doctor_id = payload.get('doctor_id')
-    date = payload.get('date')
-    time = payload.get('time')
+        errors = validate_appointment_data({
+            'doctor_id': doctor_id,
+            'date': date,
+            'time': time
+        })
 
-    errors = validate_appointment_data({
-        'doctor_id': doctor_id,
-        'date': date,
-        'time': time
-    })
+        if not patient:
+            errors['patient'] = 'Patient profile not found'
 
-    if not patient:
-        errors['patient'] = 'Patient profile not found'
+        if doctor_id:
+            doctor = doctor_model.get_by_id(doctor_id)
+            if not doctor:
+                errors['doctor_id'] = 'Invalid doctor selected'
+            elif not appointment_model.check_slot_available(doctor_id, date, time):
+                errors['time'] = 'This time slot is no longer available'
 
-    if doctor_id:
-        doctor = doctor_model.get_by_id(doctor_id)
-        if not doctor:
-            errors['doctor_id'] = 'Invalid doctor selected'
-        elif not appointment_model.check_slot_available(doctor_id, date, time):
-            errors['time'] = 'This time slot is no longer available'
+        if errors:
+            return render_template('patient/book.html',
+                                   user=user,
+                                   patient=patient,
+                                   doctors=doctors,
+                                   errors=errors,
+                                   form_data=request.form,
+                                   format_date=format_date)
 
-    if errors:
-        return jsonify({'success': False, 'errors': errors}), 400
-
-    appointment = appointment_model.create_appointment(
-        patient['PatientID'], doctor_id, date, time
-    )
-
-    doctor_user = user_model.get_by_id(doctor['UserID']) if doctor_id and doctor else None
-    doctor_name = doctor_user['Name'] if doctor_user else 'Unknown Doctor'
-
-    sns_service.send_appointment_notification(
-        user['Email'], user.get('Phone', ''),
-        {'doctor_name': doctor_name, 'date': date, 'time': time, 'status': 'Pending'},
-        'booking'
-    )
-
-    if doctor_user:
-        sns_service.send_doctor_notification(
-            doctor_user['Email'], doctor_user.get('Phone', ''),
-            f'New appointment booked by {user["Name"]} for {date} at {time}',
-            'New Appointment Booked'
+        appointment = appointment_model.create_appointment(
+            patient['PatientID'], doctor_id, date, time
         )
 
-    return jsonify({
-        'success': True,
-        'message': 'Appointment booked successfully! You will receive a confirmation shortly.',
-        'appointment': appointment
-    }), 200
+        doctor_user = user_model.get_by_id(doctor['UserID']) if doctor else None
+        doctor_name = doctor_user['Name'] if doctor_user else 'Unknown Doctor'
+
+        sns_service.send_appointment_notification(
+            user['Email'], user.get('Phone', ''),
+            {'doctor_name': doctor_name, 'date': date, 'time': time, 'status': 'Pending'},
+            'booking'
+        )
+
+        if doctor_user:
+            sns_service.send_doctor_notification(
+                doctor_user['Email'], doctor_user.get('Phone', ''),
+                f'New appointment booked by {user["Name"]} for {date} at {time}',
+                'New Appointment Booked'
+            )
+
+        flash('Appointment booked successfully! You will receive a confirmation shortly.', 'success')
+        return redirect(url_for('patient.appointments'))
+
+    return render_template('patient/book.html',
+                           user=user,
+                           patient=patient,
+                           doctors=doctors,
+                           format_date=format_date)
 
 
 @patient_bp.route('/appointment/<appointment_id>')
@@ -133,21 +137,25 @@ def appointment_detail(appointment_id):
     appointment = appointment_model.get_by_id(appointment_id)
 
     if not appointment or not patient or appointment.get('PatientID') != patient['PatientID']:
-        return jsonify({'error': 'Appointment not found'}), 404
+        flash('Appointment not found', 'danger')
+        return redirect(url_for('patient.appointments'))
 
     diagnosis = diagnosis_model.get_by_appointment(appointment_id)
     doctor = doctor_model.get_by_id(appointment['DoctorID'])
     doctor_user = user_model.get_by_id(doctor['UserID']) if doctor else None
 
-    return jsonify({
-        'appointment': appointment,
-        'doctor': doctor,
-        'doctor_user': doctor_user,
-        'diagnosis': diagnosis
-    }), 200
+    return render_template('patient/appointment_detail.html',
+                           user=user,
+                           patient=patient,
+                           appointment=appointment,
+                           diagnosis=diagnosis,
+                           doctor=doctor,
+                           doctor_user=doctor_user,
+                           format_date=format_date,
+                           format_time=format_time)
 
 
-@patient_bp.route('/appointment/<appointment_id>/cancel', methods=['POST', 'PUT'])
+@patient_bp.route('/appointment/<appointment_id>/cancel', methods=['POST'])
 @login_required
 @patient_required
 def cancel_appointment(appointment_id):
@@ -156,10 +164,12 @@ def cancel_appointment(appointment_id):
     appointment = appointment_model.get_by_id(appointment_id)
 
     if not appointment or not patient or appointment.get('PatientID') != patient['PatientID']:
-        return jsonify({'error': 'Appointment not found'}), 404
+        flash('Appointment not found', 'danger')
+        return redirect(url_for('patient.appointments'))
 
     if appointment.get('Status') in ['Completed', 'Cancelled']:
-        return jsonify({'error': 'Cannot cancel this appointment'}), 400
+        flash('Cannot cancel this appointment', 'warning')
+        return redirect(url_for('patient.appointment_detail', appointment_id=appointment_id))
 
     appointment_model.update_status(appointment_id, 'Cancelled')
 
@@ -173,12 +183,8 @@ def cancel_appointment(appointment_id):
         'cancellation'
     )
 
-    return jsonify({
-        'success': True,
-        'message': 'Appointment cancelled successfully',
-        'appointment_id': appointment_id,
-        'status': 'Cancelled'
-    }), 200
+    flash('Appointment cancelled successfully', 'success')
+    return redirect(url_for('patient.appointments'))
 
 
 @patient_bp.route('/medical-history')
@@ -193,10 +199,11 @@ def medical_history():
         diagnoses = diagnosis_model.get_by_patient(patient['PatientID'])
         diagnoses.sort(key=lambda x: x.get('Date', ''), reverse=True)
 
-    return jsonify({
-        'patient': patient,
-        'diagnoses': diagnoses
-    }), 200
+    return render_template('patient/medical_history.html',
+                           user=user,
+                           patient=patient,
+                           diagnoses=diagnoses,
+                           format_date=format_date)
 
 
 @patient_bp.route('/notifications')
@@ -208,24 +215,25 @@ def notifications():
     all_notifications = notification_model.get_by_user(user['UserID']) if user else []
     pagination = paginate_items(all_notifications, page)
 
-    return jsonify({
-        'notifications': pagination['items'],
-        'pagination': pagination
-    }), 200
+    return render_template('patient/notifications.html',
+                           user=user,
+                           notifications=pagination['items'],
+                           pagination=pagination)
 
 
-@patient_bp.route('/notification/<notification_id>/read', methods=['POST', 'PUT'])
+@patient_bp.route('/notification/<notification_id>/read', methods=['POST'])
 @login_required
 @patient_required
 def mark_notification_read(notification_id):
     notification_model.mark_as_read(notification_id)
-    return jsonify({'success': True, 'notification_id': notification_id, 'read': True}), 200
+    return redirect(url_for('patient.notifications'))
 
 
 @patient_bp.route('/doctors')
 @login_required
 @patient_required
 def doctors_list():
+    user = get_current_user()
     doctors = doctor_model.get_all_doctors()
     doctor_profiles = []
 
@@ -234,10 +242,9 @@ def doctors_list():
         if doc_user:
             doctor_profiles.append({**doctor, 'user': doc_user})
 
-    return jsonify({
-        'doctors': doctor_profiles,
-        'count': len(doctor_profiles)
-    }), 200
+    return render_template('patient/doctors.html',
+                           user=user,
+                           doctors=doctor_profiles)
 
 
 @patient_bp.route('/api/available-slots')
@@ -248,10 +255,10 @@ def api_available_slots():
     date = request.args.get('date')
 
     if not doctor_id or not date:
-        return jsonify({'slots': []}), 200
+        return jsonify({'slots': []})
 
     appointments = appointment_model.get_by_doctor_date(doctor_id, date)
     booked_slots = [a['Time'] for a in appointments if a.get('Status') in ['Pending', 'Confirmed']]
     available_slots = get_available_slots(doctor_id, date, booked_slots)
 
-    return jsonify({'slots': available_slots}), 200
+    return jsonify({'slots': available_slots})

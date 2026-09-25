@@ -1,6 +1,6 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-from flask import session, jsonify, request
+from flask import session, redirect, url_for, flash, request
 from app.models import user_model, doctor_model, patient_model
 
 
@@ -17,11 +17,13 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         user_id = session.get('user_id')
         if not user_id:
-            return jsonify({'error': 'Unauthorized', 'message': 'Please log in to access this page.'}), 401
+            flash('Please log in to access this page.', 'warning')
+            return redirect(url_for('auth.login', next=request.url))
         user = user_model.get_by_id(user_id)
         if not user:
             session.clear()
-            return jsonify({'error': 'Session expired', 'message': 'Your session has expired. Please log in again.'}), 401
+            flash('Your session has expired. Please log in again.', 'warning')
+            return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -32,13 +34,16 @@ def role_required(*roles):
         def decorated_function(*args, **kwargs):
             user_id = session.get('user_id')
             if not user_id:
-                return jsonify({'error': 'Unauthorized', 'message': 'Please log in to access this page.'}), 401
+                flash('Please log in to access this page.', 'warning')
+                return redirect(url_for('auth.login', next=request.url))
             user = user_model.get_by_id(user_id)
             if not user:
                 session.clear()
-                return jsonify({'error': 'Session expired', 'message': 'Your session has expired. Please log in again.'}), 401
+                flash('Your session has expired. Please log in again.', 'warning')
+                return redirect(url_for('auth.login'))
             if session.get('role') not in roles or user.get('Role') not in roles:
-                return jsonify({'error': 'Forbidden', 'message': 'You do not have permission to access this page.'}), 403
+                flash('You do not have permission to access this page.', 'danger')
+                return redirect(url_for('auth.dashboard'))
             return f(*args, **kwargs)
         return decorated_function
     return decorator
@@ -61,11 +66,11 @@ def get_current_user() -> dict:
         return None
     user = user_model.get_by_id(session['user_id'])
     if user:
-        if session.get('role') == 'Doctor':
+        if session.get('role') == 'Doctor' or user.get('Role') == 'Doctor':
             doctor = doctor_model.get_by_user_id(user['UserID'])
             if doctor:
                 user['doctor_profile'] = doctor
-        elif session.get('role') == 'Patient':
+        elif session.get('role') == 'Patient' or user.get('Role') == 'Patient':
             patient = patient_model.get_by_user_id(user['UserID'])
             if patient:
                 user['patient_profile'] = patient

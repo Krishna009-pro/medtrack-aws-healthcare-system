@@ -1,0 +1,93 @@
+{% extends "base/base.html" %}
+
+{% block title %}My Diagnoses - MedTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fas fa-file-medical text-primary me-2"></i>Issued Diagnosis Reports</h2>
+        <p class="text-secondary mb-0">Historical registry of all completed clinical evaluations</p>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if diagnoses %}
+        <div class="table-responsive">
+            <table class="table table-simple">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Patient</th>
+                        <th>Report Preview</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for diag in diagnoses %}
+                    {% set pat = patient_model.get_by_id(diag.PatientID) %}
+                    {% set pat_user = user_model.get_by_id(pat.UserID) if pat else None %}
+                    <tr>
+                        <td class="fw-semibold">{{ format_date(diag.Date) }}</td>
+                        <td>{{ pat_user.Name if pat_user else 'Unknown Patient' }}</td>
+                        <td>{{ diag.Report|truncate(90) }}</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#diagModal{{ diag.DiagnosisID }}">
+                                <i class="fas fa-eye me-1"></i>View Full Report
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Modal -->
+                    <div class="modal fade text-start" id="diagModal{{ diag.DiagnosisID }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold">Diagnosis Report - {{ format_date(diag.Date) }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <p class="mb-2"><strong>Patient:</strong> {{ pat_user.Name if pat_user else 'Unknown' }}</p>
+                                    <hr>
+                                    <h6 class="fw-bold text-primary mb-2">Clinical Findings & Prescriptions:</h6>
+                                    <div class="p-3 bg-light rounded" style="white-space: pre-wrap; line-height: 1.6;">{{ diag.Report }}</div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if pagination.pages > 1 %}
+        <div class="p-3 border-top">
+            <ul class="pagination justify-content-center mb-0">
+                {% if pagination.has_prev %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('doctor.diagnoses', page=pagination.page-1) }}">Previous</a></li>
+                {% endif %}
+                {% for p in range(1, pagination.pages + 1) %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('doctor.diagnoses', page=p) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                {% if pagination.has_next %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('doctor.diagnoses', page=pagination.page+1) }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-file-medical text-secondary fs-1 mb-2"></i>
+            <h5 class="fw-bold text-dark">No Diagnoses Found</h5>
+            <p class="text-secondary mb-0">You have not created any diagnosis reports yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

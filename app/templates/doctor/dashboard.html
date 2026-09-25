@@ -1,0 +1,153 @@
+{% extends "base/base.html" %}
+
+{% block title %}Doctor Dashboard - MedTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Doctor Dashboard</h2>
+        <p class="text-secondary mb-0">Welcome back, Dr. {{ user.Name }}.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('doctor.schedule') }}" class="btn btn-primary me-2">
+            <i class="fas fa-clock me-1"></i>View Full Schedule
+        </a>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div>
+                <span class="text-secondary small d-block mb-1">TODAY'S VISITS</span>
+                <h3 class="fw-bold mb-0">{{ today_appointments|length }}</h3>
+            </div>
+            <div class="stat-icon bg-primary-subtle text-primary">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div>
+                <span class="text-secondary small d-block mb-1">UPCOMING QUEUE</span>
+                <h3 class="fw-bold mb-0">{{ upcoming_appointments|length }}</h3>
+            </div>
+            <div class="stat-icon bg-success-subtle text-success">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div>
+                <span class="text-secondary small d-block mb-1">SPECIALIZATION</span>
+                <h5 class="fw-bold mb-0 text-truncate" style="max-width: 140px;">{{ doctor.Specialization if doctor else 'General' }}</h5>
+            </div>
+            <div class="stat-icon bg-info-subtle text-info">
+                <i class="fas fa-stethoscope"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div>
+                <span class="text-secondary small d-block mb-1">NOTIFICATIONS</span>
+                <h3 class="fw-bold mb-0">{{ notifications|length }}</h3>
+            </div>
+            <div class="stat-icon bg-warning-subtle text-warning">
+                <i class="fas fa-bell"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Today's Schedule Table -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="fas fa-calendar-day me-2 text-primary"></i>Today's Appointments</span>
+                <a href="{{ url_for('doctor.schedule') }}" class="small text-primary text-decoration-none">Full Schedule</a>
+            </div>
+            <div class="card-body p-0">
+                {% if today_appointments %}
+                <div class="table-responsive">
+                    <table class="table table-simple">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Patient</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for apt in today_appointments %}
+                            {% set pat = patient_model.get_by_id(apt.PatientID) %}
+                            {% set pat_user = user_model.get_by_id(pat.UserID) if pat else None %}
+                            <tr>
+                                <td class="fw-semibold">{{ format_time(apt.Time) }}</td>
+                                <td>{{ pat_user.Name if pat_user else 'Unknown Patient' }}</td>
+                                <td>
+                                    <span class="badge badge-status-{{ apt.Status|lower }} px-2 py-1">
+                                        {{ apt.Status }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('doctor.appointment_detail', appointment_id=apt.AppointmentID) }}" class="btn btn-sm btn-outline-primary">
+                                        Examine
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-check text-secondary fs-1 mb-2"></i>
+                    <p class="text-secondary mb-0">No appointments scheduled for today.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Doctor Profile & Notifications -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <span class="fw-bold"><i class="fas fa-id-card me-2 text-primary"></i>Clinician Profile</span>
+            </div>
+            <div class="card-body">
+                <h5 class="fw-bold mb-1">Dr. {{ user.Name }}</h5>
+                <p class="text-primary small mb-2">{{ doctor.Specialization if doctor else 'Clinician' }}</p>
+                <p class="text-secondary small mb-1"><strong>Email:</strong> {{ user.Email }}</p>
+                <p class="text-secondary small mb-1"><strong>Experience:</strong> {{ doctor.Experience if doctor else 0 }} years</p>
+                <p class="text-secondary small mb-0"><strong>Phone:</strong> {{ user.Phone or 'N/A' }}</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="fas fa-bell me-2 text-primary"></i>Alerts</span>
+                <a href="{{ url_for('doctor.notifications') }}" class="small text-primary text-decoration-none">View All</a>
+            </div>
+            <div class="card-body p-3">
+                {% if notifications %}
+                    {% for n in notifications[:3] %}
+                    <div class="p-2 border-bottom mb-2 pb-2">
+                        <p class="small mb-1 text-dark">{{ n.Message }}</p>
+                        <small class="text-secondary font-monospace">{{ n.Timestamp[:16].replace('T', ' ') }}</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-secondary small mb-0 text-center py-2">No active alerts.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

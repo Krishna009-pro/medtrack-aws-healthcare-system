@@ -1,0 +1,16 @@
+{% extends "base/base.html" %}
+
+{% block title %}Server Error - MedTrack{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <div class="d-inline-flex p-4 rounded-circle bg-danger-subtle text-danger mb-3">
+        <i class="fas fa-triangle-exclamation fa-3x"></i>
+    </div>
+    <h1 class="display-5 fw-bold mb-2">500 - Internal Server Error</h1>
+    <p class="text-secondary lead mb-4">An unexpected issue occurred. Our operations team has been notified.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary px-4">
+        <i class="fas fa-home me-2"></i>Return to Safety
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "base/base.html" %}
+
+{% block title %}Book Appointment - MedTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="fas fa-calendar-plus text-primary me-2"></i>Book Consultation</h2>
+                <p class="text-secondary mb-0">Select an accredited specialist, date, and preferred time</p>
+            </div>
+            <a href="{{ url_for('patient.appointments') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back
+            </a>
+        </div>
+
+        <div class="card p-4 shadow-sm">
+            {% if errors %}
+                <div class="alert alert-danger py-2 small mb-3">
+                    <ul class="mb-0 ps-3">
+                        {% for err in errors.values() %}
+                            <li>{{ err }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Select Specialist <span class="text-danger">*</span></label>
+                    <select class="form-select" name="doctor_id" id="doctorSelect" required onchange="loadAvailableSlots()">
+                        <option value="">-- Choose a Doctor --</option>
+                        {% for doc in doctors %}
+                        {% set doc_user = user_model.get_by_id(doc.UserID) %}
+                        <option value="{{ doc.DoctorID }}" {% if request.args.get('doctor_id') == doc.DoctorID or (form_data and form_data.get('doctor_id') == doc.DoctorID) %}selected{% endif %}>
+                            Dr. {{ doc_user.Name if doc_user else 'Specialist' }} ({{ doc.Specialization }} - {{ doc.Experience }} yrs exp)
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Consultation Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" name="date" id="appointmentDate" value="{{ form_data.get('date', '') if form_data else '' }}" required onchange="loadAvailableSlots()">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Consultation Time Slot <span class="text-danger">*</span></label>
+                    <select class="form-select" name="time" id="slotSelect" required>
+                        <option value="">-- Select Date First --</option>
+                        <option value="09:00">09:00 AM</option>
+                        <option value="09:30">09:30 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <option value="10:30">10:30 AM</option>
+                        <option value="11:00">11:00 AM</option>
+                        <option value="11:30">11:30 AM</option>
+                        <option value="14:00">02:00 PM</option>
+                        <option value="14:30">02:30 PM</option>
+                        <option value="15:00">03:00 PM</option>
+                        <option value="15:30">03:30 PM</option>
+                        <option value="16:00">04:00 PM</option>
+                    </select>
+                    <div id="slotHelp" class="form-text small text-secondary">Slots update automatically based on clinician availability.</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                    <i class="fas fa-check-circle me-1"></i>Confirm & Book Appointment
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Prevent selecting past dates
+document.addEventListener('DOMContentLoaded', function() {
+    var today = new Date().toISOString().split('T')[0];
+    document.getElementById('appointmentDate').setAttribute('min', today);
+    if (document.getElementById('doctorSelect').value && document.getElementById('appointmentDate').value) {
+        loadAvailableSlots();
+    }
+});
+
+function loadAvailableSlots() {
+    var doctorId = document.getElementById('doctorSelect').value;
+    var date = document.getElementById('appointmentDate').value;
+    var slotSelect = document.getElementById('slotSelect');
+
+    if (!doctorId || !date) return;
+
+    fetch(`{{ url_for('patient.api_available_slots') }}?doctor_id=${doctorId}&date=${date}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.slots && data.slots.length > 0) {
+                slotSelect.innerHTML = '';
+                data.slots.forEach(slot => {
+                    var opt = document.createElement('option');
+                    opt.value = slot;
+                    opt.textContent = slot;
+                    slotSelect.appendChild(opt);
+                });
+            }
+        })
+        .catch(err => console.log('Slot fetch info:', err));
+}
+</script>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base/base.html" %}
+
+{% block title %}Create Diagnosis - MedTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Create Diagnosis Report</h2>
+                <p class="text-secondary mb-0">Record clinical observations, treatment plans, and prescriptions</p>
+            </div>
+            <a href="{{ url_for('doctor.appointment_detail', appointment_id=appointment.AppointmentID) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back
+            </a>
+        </div>
+
+        <div class="card p-4 shadow-sm mb-4">
+            <div class="row g-2 mb-3 text-secondary small">
+                <div class="col-md-6">
+                    <strong>Patient:</strong> {{ patient_user.Name if patient_user else 'Unknown' }} ({{ patient.Age if patient else 'N/A' }} yrs)
+                </div>
+                <div class="col-md-6">
+                    <strong>Session Date:</strong> {{ format_date(appointment.Date) }} at {{ format_time(appointment.Time) }}
+                </div>
+            </div>
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Clinical Findings & Prescription <span class="text-danger">*</span></label>
+                    <textarea class="form-control" name="report" rows="10" required placeholder="Enter assessment, diagnostic conclusions, medications prescribed, and follow-up guidance..."></textarea>
+                    <div class="form-text">Include symptoms observed, diagnostic rationale, medication dosages, and follow-up intervals.</div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="fas fa-save me-1"></i>Save & Issue Diagnosis
+                    </button>
+                    <a href="{{ url_for('doctor.appointment_detail', appointment_id=appointment.AppointmentID) }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

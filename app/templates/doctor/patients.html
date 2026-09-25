@@ -1,0 +1,53 @@
+{% extends "base/base.html" %}
+
+{% block title %}My Patients - MedTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fas fa-users text-primary me-2"></i>Assigned Patients</h2>
+        <p class="text-secondary mb-0">Cohort of patients who have consulted with you</p>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if patients %}
+        <div class="table-responsive">
+            <table class="table table-simple">
+                <thead>
+                    <tr>
+                        <th>Patient Name</th>
+                        <th>Age</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in patients %}
+                    <tr>
+                        <td class="fw-semibold">{{ p.user.Name }}</td>
+                        <td>{{ p.Age ~ ' yrs' if p.Age else 'N/A' }}</td>
+                        <td>{{ p.user.Email }}</td>
+                        <td>{{ p.user.Phone or 'N/A' }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('doctor.patient_history', patient_id=p.PatientID) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-file-medical me-1"></i>View Full History
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-users-slash text-secondary fs-1 mb-2"></i>
+            <h5 class="fw-bold text-dark">No Patients Assigned</h5>
+            <p class="text-secondary mb-0">Patients will appear here once they book appointments with you.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

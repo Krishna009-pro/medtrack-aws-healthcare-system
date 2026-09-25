@@ -1,0 +1,175 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ target_user.Name }} - User Profile - MedTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="fas fa-user-circle text-primary me-2"></i>{{ target_user.Name }}</h2>
+                <p class="text-secondary mb-0">Detailed user account records and clinical profile</p>
+            </div>
+            <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Users
+            </a>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-id-card text-primary me-2"></i>Account Details</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <span class="text-secondary small fw-medium d-block">User ID</span>
+                            <span class="font-monospace text-dark">{{ target_user.UserID }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-secondary small fw-medium d-block">Full Name</span>
+                            <span class="fw-bold text-dark fs-5">{{ target_user.Name }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-secondary small fw-medium d-block">Email Address</span>
+                            <span class="text-dark">{{ target_user.Email }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-secondary small fw-medium d-block">Phone</span>
+                            <span class="text-dark">{{ target_user.Phone or 'N/A' }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-secondary small fw-medium d-block">Assigned Role</span>
+                            <span class="badge bg-{{ 'danger' if target_user.Role == 'Admin' else 'primary' if target_user.Role == 'Doctor' else 'success' }} fs-6">
+                                {{ target_user.Role }}
+                            </span>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <span class="text-secondary small fw-medium d-block">Created</span>
+                                <span class="small font-monospace text-secondary">{{ target_user.CreatedAt[:16].replace('T', ' ') if target_user.CreatedAt else 'N/A' }}</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-secondary small fw-medium d-block">Updated</span>
+                                <span class="small font-monospace text-secondary">{{ target_user.UpdatedAt[:16].replace('T', ' ') if target_user.UpdatedAt else 'N/A' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if profile %}
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="fw-bold mb-0 text-dark">
+                            <i class="fas fa-{{ 'user-md text-primary' if target_user.Role == 'Doctor' else 'notes-medical text-success' }} me-2"></i>
+                            {% if target_user.Role == 'Doctor' %}Practitioner Profile{% else %}Patient Profile{% endif %}
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        {% if target_user.Role == 'Doctor' %}
+                        <div class="mb-3">
+                            <span class="text-secondary small fw-medium d-block">Doctor ID</span>
+                            <span class="font-monospace text-dark">{{ profile.DoctorID }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-secondary small fw-medium d-block">Clinical Specialization</span>
+                            <span class="badge bg-info text-dark fs-6">{{ profile.Specialization }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-secondary small fw-medium d-block">Experience</span>
+                            <span class="text-dark">{{ profile.Experience }} years</span>
+                        </div>
+                        {% else %}
+                        <div class="mb-3">
+                            <span class="text-secondary small fw-medium d-block">Patient ID</span>
+                            <span class="font-monospace text-dark">{{ profile.PatientID }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-secondary small fw-medium d-block">Patient Age</span>
+                            <span class="text-dark">{{ profile.Age }}</span>
+                        </div>
+                        {% if profile.MedicalHistory %}
+                        <div class="mb-3">
+                            <span class="text-secondary small fw-medium d-block">Documented Medical History</span>
+                            <div class="p-3 bg-light rounded small text-dark border mt-1">
+                                {{ profile.MedicalHistory|replace('\n', '<br>')|safe }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-calendar-check text-primary me-2"></i>Associated Appointments</h5>
+            </div>
+            <div class="card-body p-0">
+                {% set apts = appointment_model.get_by_patient(profile.PatientID) if (profile and target_user.Role == 'Patient') else appointment_model.get_by_doctor(profile.DoctorID) if (profile and target_user.Role == 'Doctor') else [] %}
+                {% if apts %}
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Date & Time</th>
+                                <th>{% if target_user.Role == 'Patient' %}Doctor{% else %}Patient{% endif %}</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Appointment ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for apt in apts|sort(attribute='Date', reverse=true) %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">{{ format_date(apt.Date) }}</div>
+                                    <small class="text-secondary"><i class="fas fa-clock me-1"></i>{{ format_time(apt.Time) }}</small>
+                                </td>
+                                <td>
+                                    {% if target_user.Role == 'Patient' %}
+                                        {% set doc = doctor_model.get_by_id(apt.DoctorID) %}
+                                        {% if doc %}
+                                            {% set doc_user = user_model.get_by_id(doc.UserID) %}
+                                            <div class="fw-medium text-dark">Dr. {{ doc_user.Name if doc_user else 'Unknown' }}</div>
+                                        {% else %}
+                                            <span class="text-secondary">Unknown</span>
+                                        {% endif %}
+                                    {% else %}
+                                        {% set pat = patient_model.get_by_id(apt.PatientID) %}
+                                        {% if pat %}
+                                            {% set pat_user = user_model.get_by_id(pat.UserID) %}
+                                            <div class="fw-medium text-dark">{{ pat_user.Name if pat_user else 'Unknown' }}</div>
+                                        {% else %}
+                                            <span class="text-secondary">Unknown</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'warning text-dark' if apt.Status == 'Pending' else 'success' if apt.Status in ['Confirmed', 'Completed'] else 'secondary' }}">
+                                        {{ apt.Status }}
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4 font-monospace small text-secondary">
+                                    {{ apt.AppointmentID[:8] }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times text-secondary fs-1 mb-2"></i>
+                    <h6 class="fw-bold text-dark">No Appointments Found</h6>
+                    <p class="text-secondary mb-0">No consultations have been booked for this user profile.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
