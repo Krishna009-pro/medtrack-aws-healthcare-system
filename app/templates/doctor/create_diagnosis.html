@@ -1,0 +1,69 @@
+{% extends "base/base.html" %}
+
+{% block title %}Create Diagnosis - MedTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-file-medical me-2"></i>Create Diagnosis Report</h2>
+            <a href="{{ url_for('doctor.appointment_detail', appointment_id=appointment.AppointmentID) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back
+            </a>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Appointment Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Date:</strong> {{ format_date(appointment.Date) }}</p>
+                        <p class="mb-2"><strong>Time:</strong> {{ format_time(appointment.Time) }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Patient Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Name:</strong> {{ patient_user.Name if patient_user else 'Unknown' }}</p>
+                        <p class="mb-2"><strong>Age:</strong> {{ patient.Age if patient else 'N/A' }}</p>
+                        {% if patient and patient.MedicalHistory %}
+                        <p class="mb-2"><strong>Medical History:</strong></p>
+                        <div class="border p-2 bg-light rounded small">
+                            {{ patient.MedicalHistory|replace('\n', '<br>')|safe }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Diagnosis Report</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="report" class="form-label">Clinical Findings & Prescription <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="report" name="report" rows="15" required placeholder="Enter diagnosis, clinical findings, treatment plan, prescriptions, and follow-up instructions..."></textarea>
+                        <div class="form-text">Include: Chief complaint, History of present illness, Physical examination findings, Assessment/Diagnosis, Plan/Treatment, Prescriptions, Follow-up instructions</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i>Submit Diagnosis
+                        </button>
+                        <a href="{{ url_for('doctor.appointment_detail', appointment_id=appointment.AppointmentID) }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

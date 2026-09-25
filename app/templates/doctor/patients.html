@@ -1,0 +1,60 @@
+{% extends "base/base.html" %}
+
+{% block title %}My Patients - MedTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-users me-2"></i>My Patients</h2>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if patients %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Age</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Last Visit</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pat_profile in patients %}
+                    <tr>
+                        <td>{{ pat_profile.user.Name }}</td>
+                        <td>{{ pat_profile.Age }}</td>
+                        <td>{{ pat_profile.user.Email }}</td>
+                        <td>{{ pat_profile.user.Phone or 'N/A' }}</td>
+                        <td>
+                            {% set apts = appointment_model.get_by_patient(pat_profile.PatientID) %}
+                            {% set doc_apts = apts|selectattr('DoctorID', 'equalto', doctor.DoctorID)|list %}
+                            {% if doc_apts %}
+                                {{ format_date(doc_apts[0].Date) }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('doctor.patient_history', patient_id=pat_profile.PatientID) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-file-medical me-1"></i>View History
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-users fa-4x text-muted mb-3"></i>
+            <h4>No Patients Yet</h4>
+            <p class="text-muted">Patients will appear here after they book appointments with you.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

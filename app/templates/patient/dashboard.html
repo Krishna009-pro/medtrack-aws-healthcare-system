@@ -1,0 +1,160 @@
+{% extends "base/base.html" %}
+
+{% block title %}Dashboard - MedTrack{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-home me-2"></i>Patient Dashboard</h2>
+            <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-1"></i>Book Appointment
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Upcoming Appointments</h6>
+                        <h2 class="mb-0">{{ appointments|length }}</h2>
+                    </div>
+                    <i class="fas fa-calendar-alt fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Medical Records</h6>
+                        <h2 class="mb-0">{{ patient.MedicalHistory|length > 0 and 1 or 0 }}</h2>
+                    </div>
+                    <i class="fas fa-file-medical fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Unread Notifications</h6>
+                        <h2 class="mb-0">{{ notifications|selectattr('Read', 'equalto', false)|list|length }}</h2>
+                    </div>
+                    <i class="fas fa-bell fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Recent Appointments</h5>
+                <a href="{{ url_for('patient.appointments') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if appointments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Doctor</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for apt in appointments %}
+                            <tr>
+                                <td>{{ format_date(apt.Date) }}</td>
+                                <td>{{ format_time(apt.Time) }}</td>
+                                <td>
+                                    {% set doc = doctor_model.get_by_id(apt.DoctorID) %}
+                                    {% if doc %}
+                                        {% set doc_user = user_model.get_by_id(doc.UserID) %}
+                                        Dr. {{ doc_user.Name if doc_user else 'Unknown' }}
+                                    {% else %}
+                                        Unknown
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'warning' if apt.Status == 'Pending' else 'success' if apt.Status == 'Confirmed' else 'secondary' if apt.Status == 'Completed' else 'danger' }}">
+                                        {{ apt.Status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('patient.appointment_detail', appointment_id=apt.AppointmentID) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-2"></i>
+                    <p class="text-muted">No appointments yet</p>
+                    <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary">Book Your First Appointment</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Recent Notifications</h5>
+                <a href="{{ url_for('patient.notifications') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if notifications %}
+                <div class="list-group list-group-flush">
+                    {% for notif in notifications %}
+                    <a href="#" class="list-group-item list-group-item-action {% if not notif.Read %}active{% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ notif.Message|truncate(50) }}</h6>
+                            <small>{{ notif.Timestamp[:16] }}</small>
+                        </div>
+                        <small class="text-muted">{{ notif.Message }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-bell-slash fa-3x text-muted mb-2"></i>
+                    <p class="text-muted">No notifications</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title"><i class="fas fa-user me-2"></i>Profile</h6>
+                <p class="mb-1"><strong>{{ user.Name }}</strong></p>
+                <p class="mb-1 text-muted small">{{ user.Email }}</p>
+                {% if patient %}
+                <p class="mb-1 text-muted small">Age: {{ patient.Age }}</p>
+                <p class="mb-1 text-muted small">Patient ID: {{ patient.PatientID[:8] }}...</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

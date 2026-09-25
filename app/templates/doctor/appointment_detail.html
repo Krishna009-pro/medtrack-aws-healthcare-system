@@ -1,0 +1,110 @@
+{% extends "base/base.html" %}
+
+{% block title %}Appointment Details - MedTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-calendar-alt me-2"></i>Appointment Details</h2>
+            <a href="{{ url_for('doctor.appointments') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Appointments
+            </a>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Appointment Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Date:</strong> {{ format_date(appointment.Date) }}</p>
+                        <p class="mb-2"><strong>Time:</strong> {{ format_time(appointment.Time) }}</p>
+                        <p class="mb-2"><strong>Status:</strong>
+                            <span class="badge bg-{{ 'warning' if appointment.Status == 'Pending' else 'success' if appointment.Status == 'Confirmed' else 'secondary' if appointment.Status == 'Completed' else 'danger' }}">
+                                {{ appointment.Status }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Patient Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Name:</strong> {{ patient_user.Name if patient_user else 'Unknown' }}</p>
+                        <p class="mb-2"><strong>Email:</strong> {{ patient_user.Email if patient_user else 'N/A' }}</p>
+                        <p class="mb-2"><strong>Phone:</strong> {{ patient_user.Phone if patient_user else 'N/A' }}</p>
+                        <p class="mb-2"><strong>Age:</strong> {{ patient.Age if patient else 'N/A' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if patient and patient.MedicalHistory %}
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-file-medical me-2"></i>Patient Medical History</h5>
+            </div>
+            <div class="card-body">
+                <div class="border p-3 bg-light rounded">
+                    {{ patient.MedicalHistory|replace('\n', '<br>')|safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if diagnosis %}
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-file-medical me-2"></i>Existing Diagnosis Report</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><strong>Date:</strong> {{ format_date(diagnosis.Date) }}</p>
+                <div class="border p-3 bg-light rounded">
+                    {{ diagnosis.Report|replace('\n', '<br>')|safe }}
+                </div>
+            </div>
+        </div>
+        {% elif appointment.Status == 'Completed' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add Diagnosis</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">This appointment is completed but no diagnosis has been recorded yet.</p>
+                <a href="{{ url_for('doctor.create_diagnosis', appointment_id=appointment.AppointmentID) }}" class="btn btn-success">
+                    <i class="fas fa-file-medical me-1"></i>Create Diagnosis Report
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="card mb-4">
+            <div class="card-body">
+                {% if appointment.Status in ['Pending', 'Confirmed'] %}
+                <form method="POST" action="{{ url_for('doctor.update_appointment_status', appointment_id=appointment.AppointmentID) }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Update Status</label>
+                            <select class="form-select" name="status" required>
+                                <option value="Pending" {% if appointment.Status == 'Pending' %}selected{% endif %}>Pending</option>
+                                <option value="Confirmed" {% if appointment.Status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                                <option value="Completed" {% if appointment.Status == 'Completed' %}selected{% endif %}>Completed</option>
+                                <option value="Cancelled" {% if appointment.Status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">Update Status</button>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

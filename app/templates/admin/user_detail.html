@@ -1,0 +1,124 @@
+{% extends "base/base.html" %}
+
+{% block title %}User Details - MedTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-user me-2"></i>{{ target_user.Name }} - User Details</h2>
+            <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Users
+            </a>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Account Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>User ID:</strong> {{ target_user.UserID }}</td>
+                        <p class="mb-2"><strong>Name:</strong> {{ target_user.Name }}</p>
+                        <p class="mb-2"><strong>Email:</strong> {{ target_user.Email }}</p>
+                        <p class="mb-2"><strong>Phone:</strong> {{ target_user.Phone or 'N/A' }}</p>
+                        <p class="mb-2"><strong>Role:</strong>
+                            <span class="badge bg-{{ 'danger' if target_user.Role == 'Admin' else 'primary' if target_user.Role == 'Doctor' else 'success' }}">
+                                {{ target_user.Role }}
+                            </span>
+                        </p>
+                        <p class="mb-2"><strong>Registered:</strong> {{ target_user.CreatedAt[:16].replace('T', ' ') if target_user.CreatedAt else 'N/A' }}</p>
+                        <p class="mb-2"><strong>Last Updated:</strong> {{ target_user.UpdatedAt[:16].replace('T', ' ') if target_user.UpdatedAt else 'N/A' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% if profile %}
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">{% if target_user.Role == 'Doctor' %}Doctor Profile{% else %}Patient Profile{% endif %}</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if target_user.Role == 'Doctor' %}
+                        <p class="mb-2"><strong>Doctor ID:</strong> {{ profile.DoctorID }}</p>
+                        <p class="mb-2"><strong>Specialization:</strong> {{ profile.Specialization }}</p>
+                        <p class="mb-2"><strong>Experience:</strong> {{ profile.Experience }} years</p>
+                        {% else %}
+                        <p class="mb-2"><strong>Patient ID:</strong> {{ profile.PatientID }}</p>
+                        <p class="mb-2"><strong>Age:</strong> {{ profile.Age }}</p>
+                        {% if profile.MedicalHistory %}
+                        <p class="mb-2"><strong>Medical History:</strong></p>
+                        <div class="border p-2 bg-light rounded small">
+                            {{ profile.MedicalHistory|replace('\n', '<br>')|safe }}
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Associated Appointments</h5>
+            </div>
+            <div class="card-body">
+                {% set apts = appointment_model.get_by_patient(profile.PatientID) if target_user.Role == 'Patient' else appointment_model.get_by_doctor(profile.DoctorID) if target_user.Role == 'Doctor' else [] %}
+                {% if apts %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>{% if target_user.Role == 'Patient' %}Doctor{% else %}Patient{% endif %}</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for apt in apts|sort(attribute='Date', reverse=true) %}
+                            <tr>
+                                <td>{{ format_date(apt.Date) }}</td>
+                                <td>{{ format_time(apt.Time) }}</td>
+                                <td>
+                                    {% if target_user.Role == 'Patient' %}
+                                        {% set doc = doctor_model.get_by_id(apt.DoctorID) %}
+                                        {% if doc %}
+                                            {% set doc_user = user_model.get_by_id(doc.UserID) %}
+                                            Dr. {{ doc_user.Name if doc_user else 'Unknown' }}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    {% else %}
+                                        {% set pat = patient_model.get_by_id(apt.PatientID) %}
+                                        {% if pat %}
+                                            {% set pat_user = user_model.get_by_id(pat.UserID) %}
+                                            {{ pat_user.Name if pat_user else 'Unknown' }}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'warning' if apt.Status == 'Pending' else 'success' if apt.Status == 'Confirmed' else 'secondary' if apt.Status == 'Completed' else 'danger' }}">
+                                        {{ apt.Status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">No appointments found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

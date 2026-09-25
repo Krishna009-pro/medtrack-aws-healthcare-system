@@ -1,0 +1,21 @@
+{% extends "base/base.html" %}
+
+{% block title %}Server Error - MedTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <div class="card">
+            <div class="card-body py-5">
+                <i class="fas fa-server fa-5x text-danger mb-3"></i>
+                <h1 class="display-1">500</h1>
+                <h3>Internal Server Error</h3>
+                <p class="text-muted">Something went wrong on our end. Please try again later.</p>
+                <a href="{{ url_for('auth.dashboard') }}" class="btn btn-primary mt-3">
+                    <i class="fas fa-home me-2"></i>Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+[Unit]
+Description=MedTrack Healthcare Management System
+After=network.target
+
+[Service]
+Type=notify
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user/medtrack
+Environment=PATH=/home/ec2-user/medtrack/venv/bin
+Environment=FLASK_ENV=production
+ExecStart=/home/ec2-user/medtrack/venv/bin/gunicorn -c gunicorn/gunicorn.conf.py run:app
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=medtrack
+
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target

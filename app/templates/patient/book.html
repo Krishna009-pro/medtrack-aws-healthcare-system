@@ -1,0 +1,115 @@
+{% extends "base/base.html" %}
+
+{% block title %}Book Appointment - MedTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Book New Appointment</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="doctor_id" class="form-label">Select Doctor <span class="text-danger">*</span></label>
+                            <select class="form-select {% if errors.doctor_id %}is-invalid{% endif %}" id="doctor_id" name="doctor_id" required onchange="loadAvailableSlots()">
+                                <option value="">Choose a doctor...</option>
+                                {% for doc in doctors %}
+                                {% set doc_user = user_model.get_by_id(doc.UserID) %}
+                                <option value="{{ doc.DoctorID }}" {% if form_data.doctor_id == doc.DoctorID %}selected{% endif %}>
+                                    Dr. {{ doc_user.Name if doc_user else 'Unknown' }} - {{ doc.Specialization }} ({{ doc.Experience }} yrs exp)
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if errors.doctor_id %}
+                                <div class="invalid-feedback">{{ errors.doctor_id }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="date" class="form-label">Appointment Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control {% if errors.date %}is-invalid{% endif %}" id="date" name="date" value="{{ form_data.date or '' }}" required min="{{ today }}" onchange="loadAvailableSlots()">
+                            {% if errors.date %}
+                                <div class="invalid-feedback">{{ errors.date }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="time" class="form-label">Time Slot <span class="text-danger">*</span></label>
+                            <select class="form-select {% if errors.time %}is-invalid{% endif %}" id="time" name="time" required disabled>
+                                <option value="">Select a date and doctor first</option>
+                            </select>
+                            {% if errors.time %}
+                                <div class="invalid-feedback">{{ errors.time }}</div>
+                            {% endif %}
+                            <div id="slots-loading" class="text-muted small" style="display: none;">Loading available slots...</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-calendar-check me-1"></i>Book Appointment
+                        </button>
+                        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('date').min = today;
+
+async function loadAvailableSlots() {
+    const doctorId = document.getElementById('doctor_id').value;
+    const date = document.getElementById('date').value;
+    const timeSelect = document.getElementById('time');
+    const loadingDiv = document.getElementById('slots-loading');
+
+    if (!doctorId || !date) {
+        timeSelect.disabled = true;
+        timeSelect.innerHTML = '<option value="">Select a date and doctor first</option>';
+        return;
+    }
+
+    timeSelect.disabled = true;
+    timeSelect.innerHTML = '<option value="">Loading...</option>';
+    loadingDiv.style.display = 'block';
+
+    try {
+        const response = await fetch(`/patient/api/available-slots?doctor_id=${doctorId}&date=${date}`);
+        const data = await response.json();
+
+        timeSelect.innerHTML = '<option value="">Choose a time slot...</option>';
+        data.slots.forEach(slot => {
+            const option = document.createElement('option');
+            option.value = slot;
+            option.textContent = formatTime(slot);
+            timeSelect.appendChild(option);
+        });
+        timeSelect.disabled = false;
+    } catch (error) {
+        timeSelect.innerHTML = '<option value="">Error loading slots</option>';
+        console.error('Error loading slots:', error);
+    } finally {
+        loadingDiv.style.display = 'none';
+    }
+}
+
+function formatTime(timeStr) {
+    const [hours, minutes] = timeStr.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+}
+</script>
+{% endblock %}

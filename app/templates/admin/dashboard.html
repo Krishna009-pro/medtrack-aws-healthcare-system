@@ -1,0 +1,165 @@
+{% extends "base/base.html" %}
+
+{% block title %}Admin Dashboard - MedTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-shield-alt me-2"></i>Admin Dashboard</h2>
+    <span class="badge bg-danger fs-6">Administrator</span>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Users</h6>
+                        <h2 class="mb-0">{{ stats.total_users }}</h2>
+                    </div>
+                    <i class="fas fa-users fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Doctors</h6>
+                        <h2 class="mb-0">{{ stats.total_doctors }}</h2>
+                    </div>
+                    <i class="fas fa-user-md fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Patients</h6>
+                        <h2 class="mb-0">{{ stats.total_patients }}</h2>
+                    </div>
+                    <i class="fas fa-user-injured fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Appointments</h6>
+                        <h2 class="mb-0">{{ stats.total_appointments }}</h2>
+                    </div>
+                    <i class="fas fa-calendar-alt fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Pending Appointments</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <span>Pending</span>
+                    <span class="badge bg-warning text-dark">{{ stats.pending_appointments }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Completed</span>
+                    <span class="badge bg-success">{{ stats.completed_appointments }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Recent Registrations</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for u in recent_users[:5] %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ u.Name }}</strong>
+                                <span class="badge bg-{{ 'primary' if u.Role == 'Doctor' else 'success' if u.Role == 'Patient' else 'danger' }} ms-2">{{ u.Role }}</span>
+                            </div>
+                            <small>{{ u.CreatedAt[:10] if u.CreatedAt else 'N/A' }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Recent Appointments</h5>
+    </div>
+    <div class="card-body">
+        {% if recent_appointments %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for apt in recent_appointments %}
+                    <tr>
+                        <td>{{ format_date(apt.Date) }}</td>
+                        <td>{{ format_time(apt.Time) }}</td>
+                        <td>
+                            {% set pat = patient_model.get_by_id(apt.PatientID) %}
+                            {% if pat %}
+                                {% set pat_user = user_model.get_by_id(pat.UserID) %}
+                                {{ pat_user.Name if pat_user else 'Unknown' }}
+                            {% else %}
+                                Unknown
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% set doc = doctor_model.get_by_id(apt.DoctorID) %}
+                            {% if doc %}
+                                {% set doc_user = user_model.get_by_id(doc.UserID) %}
+                                Dr. {{ doc_user.Name if doc_user else 'Unknown' }}
+                            {% else %}
+                                Unknown
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'warning' if apt.Status == 'Pending' else 'success' if apt.Status == 'Confirmed' else 'secondary' if apt.Status == 'Completed' else 'danger' }}">
+                                {{ apt.Status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">No appointments yet</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

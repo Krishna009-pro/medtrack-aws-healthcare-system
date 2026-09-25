@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5000:8000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=True
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+      - AWS_ENDPOINT_URL=http://dynamodb-local:8000
+      - SNS_ENDPOINT_URL=http://sns-local:4566
+      - DYNAMODB_USERS_TABLE=medtrack-users
+      - DYNAMODB_DOCTORS_TABLE=medtrack-doctors
+      - DYNAMODB_PATIENTS_TABLE=medtrack-patients
+      - DYNAMODB_APPOINTMENTS_TABLE=medtrack-appointments
+      - DYNAMODB_DIAGNOSIS_TABLE=medtrack-diagnosis
+      - DYNAMODB_NOTIFICATIONS_TABLE=medtrack-notifications
+      - SNS_APPOINTMENT_ALERTS_TOPIC=arn:aws:sns:us-east-1:000000000000:MedTrack-Appointment-Alerts
+      - SNS_DIAGNOSIS_UPDATES_TOPIC=arn:aws:sns:us-east-1:000000000000:MedTrack-Diagnosis-Updates
+    volumes:
+      - .:/app
+      - /app/venv
+    depends_on:
+      - dynamodb-local
+      - sns-local
+
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    ports:
+      - "8000:8000"
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
+
+  sns-local:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sns
+      - DEBUG=1
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/medtrack.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./app/static:/app/static:ro
+    depends_on:
+      - app

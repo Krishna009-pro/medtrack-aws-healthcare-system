@@ -1,0 +1,92 @@
+{% extends "base/base.html" %}
+
+{% block title %>All Appointments - MedTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-calendar-alt me-2"></i>All Appointments</h2>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="status" class="form-label">Filter by Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Confirmed" {% if status_filter == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                    <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
+                    <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Filter</button>
+                <a href="{{ url_for('admin.appointments') }}" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if appointments %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for apt in appointments %}
+                    <tr>
+                        <td>{{ format_date(apt.Date) }}</td>
+                        <td>{{ format_time(apt.Time) }}</td>
+                        <td>{{ apt.patient_name }}</td>
+                        <td>{{ apt.doctor_name }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'warning' if apt.Status == 'Pending' else 'success' if apt.Status == 'Confirmed' else 'secondary' if apt.Status == 'Completed' else 'danger' }}">
+                                {{ apt.Status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if pagination.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.appointments', page=pagination.page-1, status=status_filter) }}">Previous</a>
+                </li>
+                {% endif %}
+                {% for p in range(1, pagination.pages+1) %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.appointments', page=p, status=status_filter) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.appointments', page=pagination.page+1, status=status_filter) }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+            <h4>No Appointments Found</h4>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

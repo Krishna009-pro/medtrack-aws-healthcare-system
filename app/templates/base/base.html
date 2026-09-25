@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MedTrack - Healthcare Management System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    {% if session.user_id %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('auth.dashboard') }}">
+                <i class="fas fa-heartbeat me-2"></i>MedTrack
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if session.role == 'Patient' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('patient.dashboard') }}">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('patient.appointments') }}">
+                            <i class="fas fa-calendar-alt me-1"></i>Appointments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('patient.book_appointment') }}">
+                            <i class="fas fa-plus-circle me-1"></i>Book Appointment
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('patient.medical_history') }}">
+                            <i class="fas fa-file-medical me-1"></i>Medical History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('patient.doctors_list') }}">
+                            <i class="fas fa-user-md me-1"></i>Doctors
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('patient.notifications') }}">
+                            <i class="fas fa-bell me-1"></i>Notifications
+                        </a>
+                    </li>
+                    {% elif session.role == 'Doctor' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.dashboard') }}">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.appointments') }}">
+                            <i class="fas fa-calendar-alt me-1"></i>Appointments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.patients_list') }}">
+                            <i class="fas fa-users me-1"></i>Patients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.diagnoses') }}">
+                            <i class="fas fa-file-medical me-1"></i>Diagnoses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.schedule') }}">
+                            <i class="fas fa-calendar-day me-1"></i>Schedule
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('doctor.notifications') }}">
+                            <i class="fas fa-bell me-1"></i>Notifications
+                        </a>
+                    </li>
+                    {% elif session.role == 'Admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.users') }}">
+                            <i class="fas fa-users me-1"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.appointments') }}">
+                            <i class="fas fa-calendar-alt me-1"></i>Appointments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.diagnoses') }}">
+                            <i class="fas fa-file-medical me-1"></i>Diagnoses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.notifications') }}">
+                            <i class="fas fa-bell me-1"></i>Notifications
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-2">
+                        {% if app_mode == 'local' %}
+                        <span class="badge bg-warning text-dark" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Running in Local Mode. Add AWS credentials in .env to switch to AWS automatically.">
+                            <i class="fas fa-laptop-code me-1"></i>Local Mode
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Connected to AWS DynamoDB &amp; SNS">
+                            <i class="fab fa-aws me-1"></i>AWS Mode
+                        </span>
+                        {% endif %}
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>{{ session.name }}
+                            <span class="badge bg-light text-primary ms-1">{{ session.role }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% else %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('auth.login') }}">
+                <i class="fas fa-heartbeat me-2"></i>MedTrack
+            </a>
+            <div class="d-flex align-items-center">
+                {% if app_mode == 'local' %}
+                <span class="badge bg-warning text-dark" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Running in Local Mode. Add AWS credentials in .env to switch to AWS automatically.">
+                    <i class="fas fa-laptop-code me-1"></i>Local Mode
+                </span>
+                {% else %}
+                <span class="badge bg-success" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Connected to AWS DynamoDB &amp; SNS">
+                    <i class="fab fa-aws me-1"></i>AWS Mode
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="container py-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-light py-3 mt-5">
+        <div class="container text-center text-muted">
+            <small>&copy; 2026 MedTrack - Healthcare Management System &bull; 
+                {% if app_mode == 'local' %}
+                <span class="text-secondary fw-semibold"><i class="fas fa-laptop-code text-warning me-1"></i>Local Storage &amp; Mock SNS</span> (Auto-switches to AWS when credentials are added)
+                {% else %}
+                <span class="text-success fw-semibold"><i class="fab fa-aws me-1"></i>Connected to AWS Services</span>
+                {% endif %}
+            </small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

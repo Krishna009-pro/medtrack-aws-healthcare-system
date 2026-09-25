@@ -1,0 +1,112 @@
+{
+  "medtrack-users": {
+    "admin-user-001": {
+      "UserID": "admin-user-001",
+      "Name": "System Administrator",
+      "Email": "admin@medtrack.com",
+      "Password": "scrypt:32768:8:1$9Plz2D1BobQgp7PQ$ea258599ed60ddf323554e0edab4d6b252ff6f151f6d9322890351070dc88ee546b402c3db377d0aa41abe78ca34917516a3d3c62fb01499b2a9edd22b3dff7d",
+      "Role": "Admin",
+      "Phone": "+1-555-0100",
+      "CreatedAt": "2026-09-25T10:05:33.937100",
+      "UpdatedAt": "2026-09-25T10:05:33.937100"
+    },
+    "doc-user-001": {
+      "UserID": "doc-user-001",
+      "Name": "Dr. Sarah Jenkins",
+      "Email": "doctor@medtrack.com",
+      "Password": "scrypt:32768:8:1$xcxIsg9cdWEj5ndf$de2e878d8c7a492925eb8a0160884fdb490196ff6ec068899063cee5cf9cf1a5d906ae72d139a7152241a2f2cd33d5dcd1867e5252d54190f974471cdd15ce3e",
+      "Role": "Doctor",
+      "Phone": "+1-555-0101",
+      "CreatedAt": "2026-09-25T10:05:33.937100",
+      "UpdatedAt": "2026-09-25T10:05:33.937100"
+    },
+    "doc-user-002": {
+      "UserID": "doc-user-002",
+      "Name": "Dr. Michael Chen",
+      "Email": "dr.chen@medtrack.com",
+      "Password": "scrypt:32768:8:1$w1STHBAWZF3bGSLi$91ac395e08d124b5a5207dcab28fcdc921674c80152c5313c7f6754bc1cfc955c3c5de543c4838f18dcbcb86ba5814cce6091414e59142cbd7afc5335a2599dd",
+      "Role": "Doctor",
+      "Phone": "+1-555-0102",
+      "CreatedAt": "2026-09-25T10:05:33.937100",
+      "UpdatedAt": "2026-09-25T10:05:33.937100"
+    },
+    "pat-user-001": {
+      "UserID": "pat-user-001",
+      "Name": "Jane Doe",
+      "Email": "patient@medtrack.com",
+      "Password": "scrypt:32768:8:1$4AAMbCvrhwI5RSqw$a9afe61126177ab7c82a94fd279254a213814b4ab62ae5fba874f31a2150a1e78608ae9e9fd09422e49a07cf668b3587a3277dfc33acdb460f910f63a19a1280",
+      "Role": "Patient",
+      "Phone": "+1-555-0103",
+      "CreatedAt": "2026-09-25T10:05:33.937100",
+      "UpdatedAt": "2026-09-25T10:05:33.937100"
+    }
+  },
+  "medtrack-doctors": {
+    "doc-001": {
+      "DoctorID": "doc-001",
+      "UserID": "doc-user-001",
+      "Specialization": "Cardiology",
+      "Experience": 12,
+      "CreatedAt": "2026-09-25T10:05:33.937100",
+      "UpdatedAt": "2026-09-25T10:05:33.937100"
+    },
+    "doc-002": {
+      "DoctorID": "doc-002",
+      "UserID": "doc-user-002",
+      "Specialization": "General Practice",
+      "Experience": 8,
+      "CreatedAt": "2026-09-25T10:05:33.937100",
+      "UpdatedAt": "2026-09-25T10:05:33.937100"
+    }
+  },
+  "medtrack-patients": {
+    "pat-001": {
+      "PatientID": "pat-001",
+      "UserID": "pat-user-001",
+      "Age": 34,
+      "MedicalHistory": "Asthma diagnosed in 2018. Penicillin allergy. Prior appendectomy (2020).",
+      "CreatedAt": "2026-09-25T10:05:33.937100",
+      "UpdatedAt": "2026-09-25T10:05:33.937100"
+    }
+  },
+  "medtrack-appointments": {
+    "apt-001": {
+      "AppointmentID": "apt-001",
+      "PatientID": "pat-001",
+      "DoctorID": "doc-001",
+      "Date": "2026-09-25",
+      "Time": "10:00",
+      "Status": "Confirmed",
+      "CreatedAt": "2026-09-25T10:05:33.937100",
+      "UpdatedAt": "2026-09-25T10:05:33.937100"
+    }
+  },
+  "medtrack-diagnosis": {
+    "diag-001": {
+      "DiagnosisID": "diag-001",
+      "AppointmentID": "apt-001",
+      "DoctorID": "doc-001",
+      "PatientID": "pat-001",
+      "Report": "Annual cardiovascular assessment: Blood pressure 118/76 mmHg. Resting pulse 72 bpm. EKG demonstrates regular sinus rhythm. Continue balanced diet and light cardio exercise.",
+      "Date": "2026-09-25",
+      "CreatedAt": "2026-09-25T10:05:33.937100",
+      "UpdatedAt": "2026-09-25T10:05:33.937100"
+    }
+  },
+  "medtrack-notifications": {
+    "notif-001": {
+      "NotificationID": "notif-001",
+      "UserID": "pat-user-001",
+      "Message": "Welcome to MedTrack! Your consultation with Dr. Sarah Jenkins is confirmed for 2026-09-25 at 10:00 AM.",
+      "Timestamp": "2026-09-25T10:05:33.937100",
+      "Read": false
+    },
+    "notif-002": {
+      "NotificationID": "notif-002",
+      "UserID": "doc-user-001",
+      "Message": "Confirmed appointment with patient Jane Doe scheduled for 2026-09-25 at 10:00 AM.",
+      "Timestamp": "2026-09-25T10:05:33.937100",
+      "Read": false
+    }
+  }
+}

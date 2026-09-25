@@ -1,0 +1,60 @@
+{% extends "base/base.html" %}
+
+{% block title %}Notifications - MedTrack Doctor Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-bell me-2"></i>Doctor Notifications</h2>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if notifications %}
+        <div class="list-group list-group-flush">
+            {% for notif in notifications %}
+            <div class="list-group-item {% if not notif.Read %}list-group-item-primary{% endif %}">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">{{ notif.Message|truncate(80) }}</h6>
+                    <small>{{ notif.Timestamp[:16].replace('T', ' ') }}</small>
+                </div>
+                <p class="mb-1">{{ notif.Message }}</p>
+                {% if not notif.Read %}
+                <form method="POST" action="{{ url_for('doctor.mark_notification_read', notification_id=notif.NotificationID) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Mark as Read</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if pagination.pages > 1 %}
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('doctor.notifications', page=pagination.page-1) }}">Previous</a>
+                </li>
+                {% endif %}
+                {% for p in range(1, pagination.pages+1) %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('doctor.notifications', page=p) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('doctor.notifications', page=pagination.page+1) }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+            <h4>No Notifications</h4>
+            <p class="text-muted">You have no new clinical alerts or notifications at this time.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
