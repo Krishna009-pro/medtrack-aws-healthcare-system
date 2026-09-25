@@ -14,76 +14,158 @@
 </head>
 <body>
 
+    {% set ep = request.endpoint %}
+
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-heart-pulse"></i>
-                <span>MedTrack</span>
+            <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none" href="{{ url_for('index') }}">
+                <div class="brand-icon-box">
+                    <i class="fas fa-heart-pulse"></i>
+                </div>
+                <span class="brand-title">MedTrack</span>
             </a>
 
             <!-- Mobile Toggle -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
                     {% if session.get('user_id') %}
                         {% if session.get('role') == 'Patient' %}
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('patient.dashboard') }}"><i class="fas fa-home me-1"></i>Dashboard</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('patient.appointments') }}"><i class="fas fa-calendar-alt me-1"></i>Appointments</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('patient.book_appointment') }}"><i class="fas fa-plus-circle me-1"></i>Book</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('patient.doctors_list') }}"><i class="fas fa-user-md me-1"></i>Doctors</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('patient.medical_history') }}"><i class="fas fa-file-medical me-1"></i>History</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep == 'patient.dashboard' %}active{% endif %}" href="{{ url_for('patient.dashboard') }}">
+                                    <i class="fas fa-home me-1"></i>Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep in ['patient.appointments', 'patient.appointment_detail'] %}active{% endif %}" href="{{ url_for('patient.appointments') }}">
+                                    <i class="fas fa-calendar-alt me-1"></i>Appointments
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep == 'patient.book_appointment' %}active{% endif %}" href="{{ url_for('patient.book_appointment') }}">
+                                    <i class="fas fa-plus-circle me-1"></i>Book Visit
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep == 'patient.doctors_list' %}active{% endif %}" href="{{ url_for('patient.doctors_list') }}">
+                                    <i class="fas fa-user-md me-1"></i>Doctors
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep == 'patient.medical_history' %}active{% endif %}" href="{{ url_for('patient.medical_history') }}">
+                                    <i class="fas fa-file-medical me-1"></i>Medical History
+                                </a>
+                            </li>
                         {% elif session.get('role') == 'Doctor' %}
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor.dashboard') }}"><i class="fas fa-home me-1"></i>Dashboard</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor.appointments') }}"><i class="fas fa-calendar-check me-1"></i>Appointments</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor.schedule') }}"><i class="fas fa-clock me-1"></i>Schedule</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor.patients_list') }}"><i class="fas fa-users me-1"></i>Patients</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor.diagnoses') }}"><i class="fas fa-notes-medical me-1"></i>Diagnoses</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep == 'doctor.dashboard' %}active{% endif %}" href="{{ url_for('doctor.dashboard') }}">
+                                    <i class="fas fa-home me-1"></i>Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep in ['doctor.appointments', 'doctor.appointment_detail'] %}active{% endif %}" href="{{ url_for('doctor.appointments') }}">
+                                    <i class="fas fa-calendar-check me-1"></i>Appointments
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep == 'doctor.schedule' %}active{% endif %}" href="{{ url_for('doctor.schedule') }}">
+                                    <i class="fas fa-clock me-1"></i>Schedule
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep in ['doctor.patients_list', 'doctor.patient_history'] %}active{% endif %}" href="{{ url_for('doctor.patients_list') }}">
+                                    <i class="fas fa-users me-1"></i>Patients
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep in ['doctor.diagnoses', 'doctor.create_diagnosis'] %}active{% endif %}" href="{{ url_for('doctor.diagnoses') }}">
+                                    <i class="fas fa-notes-medical me-1"></i>Diagnoses
+                                </a>
+                            </li>
                         {% elif session.get('role') == 'Admin' %}
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-shield-alt me-1"></i>Dashboard</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.users') }}"><i class="fas fa-users-cog me-1"></i>Users</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.appointments') }}"><i class="fas fa-calendar-alt me-1"></i>Appointments</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.diagnoses') }}"><i class="fas fa-file-medical me-1"></i>Diagnoses</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">
+                                    <i class="fas fa-shield-alt me-1"></i>Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep in ['admin.users', 'admin.user_detail'] %}active{% endif %}" href="{{ url_for('admin.users') }}">
+                                    <i class="fas fa-users-cog me-1"></i>Users
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep == 'admin.appointments' %}active{% endif %}" href="{{ url_for('admin.appointments') }}">
+                                    <i class="fas fa-calendar-alt me-1"></i>Appointments
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep == 'admin.diagnoses' %}active{% endif %}" href="{{ url_for('admin.diagnoses') }}">
+                                    <i class="fas fa-file-medical me-1"></i>Diagnoses
+                                </a>
+                            </li>
                         {% endif %}
                     {% else %}
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">About</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('contact_us') }}">Contact</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if ep == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
+                                <i class="fas fa-home me-1"></i>Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if ep == 'about' %}active{% endif %}" href="{{ url_for('about') }}">
+                                <i class="fas fa-info-circle me-1"></i>About
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if ep == 'contact_us' %}active{% endif %}" href="{{ url_for('contact_us') }}">
+                                <i class="fas fa-envelope me-1"></i>Contact
+                            </a>
+                        </li>
                     {% endif %}
                 </ul>
 
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
                     <!-- Operational Mode Status Pill -->
-                    <span class="badge bg-light text-primary border px-2 py-1">
-                        <i class="fas fa-server me-1"></i>{{ app_mode }}
+                    <span class="mode-pill me-1" title="Current Engine Execution Mode">
+                        <span class="mode-dot"></span>
+                        {{ app_mode }}
                     </span>
 
                     {% if session.get('user_id') %}
-                        <!-- Notifications bell -->
+                        <!-- Notifications Bell -->
+                        {% set is_notif_active = ep in ['patient.notifications', 'doctor.notifications', 'admin.notifications'] %}
                         {% if session.get('role') == 'Patient' %}
-                            <a href="{{ url_for('patient.notifications') }}" class="btn btn-sm btn-outline-secondary" title="Notifications">
+                            <a href="{{ url_for('patient.notifications') }}" class="btn btn-sm {% if is_notif_active %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;" title="Notifications">
                                 <i class="fas fa-bell"></i>
                             </a>
                         {% elif session.get('role') == 'Doctor' %}
-                            <a href="{{ url_for('doctor.notifications') }}" class="btn btn-sm btn-outline-secondary" title="Notifications">
+                            <a href="{{ url_for('doctor.notifications') }}" class="btn btn-sm {% if is_notif_active %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;" title="Notifications">
                                 <i class="fas fa-bell"></i>
                             </a>
                         {% elif session.get('role') == 'Admin' %}
-                            <a href="{{ url_for('admin.notifications') }}" class="btn btn-sm btn-outline-secondary" title="Notifications">
+                            <a href="{{ url_for('admin.notifications') }}" class="btn btn-sm {% if is_notif_active %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;" title="Notifications">
                                 <i class="fas fa-bell"></i>
                             </a>
                         {% endif %}
 
-                        <span class="badge bg-primary px-3 py-2">
-                            <i class="fas fa-user me-1"></i>{{ session.get('name') }} ({{ session.get('role') }})
-                        </span>
-                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
+                        <!-- User Profile Pill -->
+                        <div class="user-pill d-flex align-items-center gap-2">
+                            <i class="fas fa-user-circle text-primary fs-5"></i>
+                            <div class="lh-1 text-start">
+                                <span class="d-block fw-semibold text-dark fs-7">{{ session.get('name') }}</span>
+                                <small class="text-secondary fs-8">{{ session.get('role') }}</small>
+                            </div>
+                        </div>
+
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger px-3 rounded-pill" title="Log Out">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="btn btn-sm btn-outline-primary">Sign In</a>
-                        <a href="{{ url_for('signup') }}" class="btn btn-sm btn-primary">Register</a>
+                        <a href="{{ url_for('login') }}" class="btn btn-sm btn-outline-primary px-3 rounded-pill {% if ep in ['login', 'auth.login'] %}active{% endif %}">Sign In</a>
+                        <a href="{{ url_for('signup') }}" class="btn btn-sm btn-primary px-3 rounded-pill {% if ep in ['signup', 'auth.register'] %}active{% endif %}">Register</a>
                     {% endif %}
                 </div>
             </div>
