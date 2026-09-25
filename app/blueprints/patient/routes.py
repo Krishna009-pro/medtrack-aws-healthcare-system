@@ -102,23 +102,21 @@ def book_appointment():
         doctor_user = user_model.get_by_id(doctor['UserID']) if doctor else None
         doctor_name = doctor_user['Name'] if doctor_user else 'Unknown Doctor'
 
-        # SmartBridge Proof of Data Storage Server Log
+        # Local Storage & Server Confirmation Log
         try:
-            booking_info = {
-                'booking_id': appointment['AppointmentID'],
+            appointment_info = {
+                'appointment_id': appointment['AppointmentID'],
                 'user_id': user['UserID'],
                 'doctor': doctor_name,
                 'date': date,
                 'time': time,
                 'status': appointment.get('Status', 'Pending')
             }
-            all_bookings = appointment_model.get_by_patient(patient['PatientID'])
-            print("🎟️ Booking Added:", booking_info)
-            print("📅 Appointment Added:", booking_info)
-            print("📦 All Bookings:", all_bookings)
-            print("📦 All Appointments:", all_bookings)
+            all_appointments = appointment_model.get_by_patient(patient['PatientID'])
+            print("📅 Appointment Added:", appointment_info)
+            print("📦 All Appointments:", all_appointments)
         except Exception as e:
-            print(f"Booking log error: {e}")
+            print(f"Appointment log error: {e}")
 
         sns_service.send_appointment_notification(
             user['Email'], user.get('Phone', ''),

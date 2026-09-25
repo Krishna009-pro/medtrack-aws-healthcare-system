@@ -42,13 +42,14 @@ def create_app(config_name=None):
     def index():
         from flask import render_template, redirect, url_for, session
         if 'user_id' in session or 'user' in session:
-            return redirect(url_for('home1'))
+            return redirect(url_for('home'))
         return render_template('index.html')
 
-    @app.route('/home1')
+    @app.route('/dashboard')
     @app.route('/home')
-    def home1():
-        from flask import render_template, redirect, url_for, session
+    @app.route('/home1')
+    def home():
+        from flask import redirect, url_for, session
         if 'user_id' not in session and 'user' not in session:
             return redirect(url_for('login'))
 
@@ -70,7 +71,7 @@ def create_app(config_name=None):
             return redirect(url_for('doctor.dashboard'))
         elif role == 'Admin':
             return redirect(url_for('admin.dashboard'))
-        return render_template('home1.html', user=session.get('user'))
+        return redirect(url_for('auth.login'))
 
     @app.route('/login', methods=['GET', 'POST'])
     def login():
@@ -98,23 +99,6 @@ def create_app(config_name=None):
     def contact_us():
         from flask import render_template
         return render_template('contact_us.html')
-
-    @app.route('/b1', methods=['GET'])
-    def b1():
-        from flask import redirect, url_for, session
-        if 'user_id' not in session and 'user' not in session:
-            return redirect(url_for('login'))
-        return redirect(url_for('patient.book_appointment'))
-
-    @app.route('/tickets', methods=['GET', 'POST'])
-    def tickets():
-        from flask import redirect, url_for, session, request
-        if 'user_id' not in session and 'user' not in session:
-            return redirect(url_for('login'))
-        if request.method == 'POST':
-            from app.blueprints.patient.routes import book_appointment as patient_book
-            return patient_book()
-        return redirect(url_for('patient.appointments'))
 
     @app.route('/health')
     def health():

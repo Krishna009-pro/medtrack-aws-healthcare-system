@@ -200,16 +200,12 @@ draw_arrow(
 
 plt.tight_layout()
 
-# Save to destination paths
+# Save to destination path
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-out_path_1 = os.path.join(base_dir, "images", "er_diagram.png")
-out_path_2 = os.path.join(base_dir, "docs", "images", "er_diagram.png")
+out_path = os.path.join(base_dir, "images", "er_diagram.png")
 
-os.makedirs(os.path.dirname(out_path_1), exist_ok=True)
-os.makedirs(os.path.dirname(out_path_2), exist_ok=True)
-
-fig.savefig(out_path_1, dpi=300, bbox_inches='tight', pad_inches=0.4)
-fig.savefig(out_path_2, dpi=300, bbox_inches='tight', pad_inches=0.4)
+os.makedirs(os.path.dirname(out_path), exist_ok=True)
+fig.savefig(out_path, dpi=300, bbox_inches='tight', pad_inches=0.4)
 plt.close(fig)
 
-print(f"Generated high-resolution ER diagram at: {out_path_1} and {out_path_2}")
+print(f"Generated high-resolution ER diagram at: {out_path}")
