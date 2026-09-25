@@ -1,10 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Blueprint, request, jsonify
 from app.models import (
     user_model, doctor_model, patient_model, appointment_model,
     diagnosis_model, notification_model
 )
 from app.utils.auth import login_required, admin_required, get_current_user
-from app.utils.helpers import format_date, format_time, paginate_items
+from app.utils.helpers import paginate_items
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -24,140 +24,130 @@ def dashboard():
         'total_doctors': len(doctors),
         'total_patients': len(patients),
         'total_appointments': len(appointments),
-        'pending_appointments': len([a for a in appointments if a['Status'] == 'Pending']),
-        'completed_appointments': len([a for a in appointments if a['Status'] == 'Completed']),
+        'pending_appointments': len([a for a in appointments if a.get('Status') == 'Pending']),
+        'completed_appointments': len([a for a in appointments if a.get('Status') == 'Completed']),
     }
 
-    recent_appointments = sorted(appointments, key=lambda x: x['CreatedAt'], reverse=True)[:10]
+    recent_appointments = sorted(appointments, key=lambda x: x.get('CreatedAt', ''), reverse=True)[:10]
     recent_users = sorted(users, key=lambda x: x.get('CreatedAt', ''), reverse=True)[:10]
 
-    return render_template('admin/dashboard.html',
-                           user=user,
-                           stats=stats,
-                           recent_appointments=recent_appointments,
-                           recent_users=recent_users,
-                           format_date=format_date,
-                           format_time=format_time)
+    return jsonify({
+        'user': user,
+        'stats': stats,
+        'recent_appointments': recent_appointments,
+        'recent_users': recent_users
+    }), 200
 
 
 @admin_bp.route('/users')
 @login_required
 @admin_required
 def users():
-    user = get_current_user()
     page = request.args.get('page', 1, type=int)
     role_filter = request.args.get('role', '')
 
     all_users = user_model.scan()
     if role_filter:
-        all_users = [u for u in all_users if u['Role'] == role_filter]
+        all_users = [u for u in all_users if u.get('Role') == role_filter]
     all_users.sort(key=lambda x: x.get('CreatedAt', ''), reverse=True)
 
     pagination = paginate_items(all_users, page)
 
-    return render_template('admin/users.html',
-                           user=user,
-                           users=pagination['items'],
-                           pagination=pagination,
-                           role_filter=role_filter)
+    return jsonify({
+        'users': pagination['items'],
+        'pagination': pagination,
+        'role_filter': role_filter,
+        'total_users': len(all_users)
+    }), 200
 
 
 @admin_bp.route('/user/<user_id>')
 @login_required
 @admin_required
 def user_detail(user_id):
-    user = get_current_user()
     target_user = user_model.get_by_id(user_id)
-
     if not target_user:
-        flash('User not found', 'danger')
-        return redirect(url_for('admin.users'))
+        return jsonify({'error': 'User not found'}), 404
 
     profile = None
-    if target_user['Role'] == 'Doctor':
+    if target_user.get('Role') == 'Doctor':
         profile = doctor_model.get_by_user_id(user_id)
-    elif target_user['Role'] == 'Patient':
+    elif target_user.get('Role') == 'Patient':
         profile = patient_model.get_by_user_id(user_id)
 
-    return render_template('admin/user_detail.html',
-                           user=user,
-                           target_user=target_user,
-                           profile=profile)
+    return jsonify({
+        'target_user': target_user,
+        'profile': profile
+    }), 200
 
 
 @admin_bp.route('/appointments')
 @login_required
 @admin_required
 def appointments():
-    user = get_current_user()
     page = request.args.get('page', 1, type=int)
     status_filter = request.args.get('status', '')
 
     all_appointments = appointment_model.scan()
     if status_filter:
-        all_appointments = [a for a in all_appointments if a['Status'] == status_filter]
-    all_appointments.sort(key=lambda x: (x['Date'], x['Time']), reverse=True)
+        all_appointments = [a for a in all_appointments if a.get('Status') == status_filter]
+    all_appointments.sort(key=lambda x: (x.get('Date', ''), x.get('Time', '')), reverse=True)
 
     pagination = paginate_items(all_appointments, page)
 
     for apt in pagination['items']:
-        patient = patient_model.get_by_id(apt['PatientID'])
-        doctor = doctor_model.get_by_id(apt['DoctorID'])
+        patient = patient_model.get_by_id(apt.get('PatientID'))
+        doctor = doctor_model.get_by_id(apt.get('DoctorID'))
         apt['patient_name'] = user_model.get_by_id(patient['UserID'])['Name'] if patient else 'Unknown'
         apt['doctor_name'] = user_model.get_by_id(doctor['UserID'])['Name'] if doctor else 'Unknown'
 
-    return render_template('admin/appointments.html',
-                           user=user,
-                           appointments=pagination['items'],
-                           pagination=pagination,
-                           status_filter=status_filter,
-                           format_date=format_date,
-                           format_time=format_time)
+    return jsonify({
+        'appointments': pagination['items'],
+        'pagination': pagination,
+        'status_filter': status_filter
+    }), 200
 
 
 @admin_bp.route('/diagnoses')
 @login_required
 @admin_required
 def diagnoses():
-    user = get_current_user()
     page = request.args.get('page', 1, type=int)
 
     all_diagnoses = diagnosis_model.scan()
-    all_diagnoses.sort(key=lambda x: x['Date'], reverse=True)
+    all_diagnoses.sort(key=lambda x: x.get('Date', ''), reverse=True)
 
     pagination = paginate_items(all_diagnoses, page)
 
     for diag in pagination['items']:
-        patient = patient_model.get_by_id(diag['PatientID'])
-        doctor = doctor_model.get_by_id(diag['DoctorID'])
+        patient = patient_model.get_by_id(diag.get('PatientID'))
+        doctor = doctor_model.get_by_id(diag.get('DoctorID'))
         diag['patient_name'] = user_model.get_by_id(patient['UserID'])['Name'] if patient else 'Unknown'
         diag['doctor_name'] = user_model.get_by_id(doctor['UserID'])['Name'] if doctor else 'Unknown'
 
-    return render_template('admin/diagnoses.html',
-                           user=user,
-                           diagnoses=pagination['items'],
-                           pagination=pagination,
-                           format_date=format_date)
+    return jsonify({
+        'diagnoses': pagination['items'],
+        'pagination': pagination
+    }), 200
 
 
 @admin_bp.route('/notifications')
 @login_required
 @admin_required
 def notifications():
-    user = get_current_user()
     page = request.args.get('page', 1, type=int)
 
     all_notifications = notification_model.scan()
-    all_notifications.sort(key=lambda x: x['Timestamp'], reverse=True)
+    all_notifications.sort(key=lambda x: x.get('Timestamp', ''), reverse=True)
 
     pagination = paginate_items(all_notifications, page)
 
     for notif in pagination['items']:
-        notif_user = user_model.get_by_id(notif['UserID'])
+        notif_user = user_model.get_by_id(notif.get('UserID'))
         notif['user_name'] = notif_user['Name'] if notif_user else 'Unknown'
         notif['user_email'] = notif_user['Email'] if notif_user else 'Unknown'
 
-    return render_template('admin/notifications.html',
-                           user=user,
-                           notifications=pagination['items'],
-                           pagination=pagination)
+    return jsonify({
+        'notifications': pagination['items'],
+        'pagination': pagination
+    }), 200

@@ -1,150 +1,157 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, request, session, jsonify
 from app.models import user_model, doctor_model, patient_model
 from app.utils.auth import hash_password, verify_password
+from app.config import Config
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
-        name = request.form.get('name', '').strip()
-        password = request.form.get('password', '')
-        confirm_password = request.form.get('confirm_password', '')
-        role = request.form.get('role', 'Patient')
-        phone = request.form.get('phone', '').strip()
+    if request.method == 'GET':
+        return jsonify({
+            'message': 'Create Account or Register',
+            'action': '/auth/register',
+            'method': 'POST',
+            'required_fields': ['email', 'name', 'password', 'confirm_password', 'role', 'phone'],
+            'optional_doctor_fields': ['specialization', 'experience'],
+            'optional_patient_fields': ['age', 'medical_history']
+        })
 
-        errors = {}
-        if not email:
-            errors['email'] = 'Email is required'
-        if not name:
-            errors['name'] = 'Name is required'
-        if not password:
-            errors['password'] = 'Password is required'
-        elif len(password) < 8:
-            errors['password'] = 'Password must be at least 8 characters'
-        if password != confirm_password:
-            errors['confirm_password'] = 'Passwords do not match'
-        if role not in ['Patient', 'Doctor']:
-            errors['role'] = 'Invalid role selected'
+    payload = request.get_json(silent=True) or request.form or {}
+    email = payload.get('email', '').strip().lower()
+    name = payload.get('name', '').strip()
+    password = payload.get('password', '')
+    confirm_password = payload.get('confirm_password', '')
+    role = payload.get('role', 'Patient')
+    phone = payload.get('phone', '').strip()
 
-        if user_model.get_by_email(email):
-            errors['email'] = 'Email already registered'
+    errors = {}
+    if not email:
+        errors['email'] = 'Email is required'
+    if not name:
+        errors['name'] = 'Name is required'
+    if not password:
+        errors['password'] = 'Password is required'
+    elif len(password) < 8:
+        errors['password'] = 'Password must be at least 8 characters'
+    if password != confirm_password:
+        errors['confirm_password'] = 'Passwords do not match'
+    if role not in ['Patient', 'Doctor']:
+        errors['role'] = 'Invalid role selected'
 
-        if errors:
-            return render_template('auth/register.html', errors=errors, form_data=request.form)
+    if user_model.get_by_email(email):
+        errors['email'] = 'Email already registered'
 
-        password_hash = hash_password(password)
-        user = user_model.create_user(email, name, password_hash, role, phone)
+    if errors:
+        return jsonify({'success': False, 'errors': errors}), 400
 
-        if role == 'Doctor':
-            specialization = request.form.get('specialization', '').strip()
-            experience = request.form.get('experience', 0)
-            try:
-                experience = int(experience)
-            except ValueError:
-                experience = 0
-            if specialization:
-                doctor_model.create_doctor(user['UserID'], specialization, experience)
-        elif role == 'Patient':
-            age = request.form.get('age', 0)
-            medical_history = request.form.get('medical_history', '').strip()
-            try:
-                age = int(age)
-            except ValueError:
-                age = 0
-            patient_model.create_patient(user['UserID'], age, medical_history)
+    password_hash = hash_password(password)
+    user = user_model.create_user(email, name, password_hash, role, phone)
 
-        flash('Registration successful! Please log in.', 'success')
-
-        # SmartBridge Proof of Data Storage Server Log
+    if role == 'Doctor':
+        specialization = payload.get('specialization', '').strip()
+        experience = payload.get('experience', 0)
         try:
-            all_users = user_model.scan()
-            formatted_users = [
-                {
-                    'id': u.get('UserID'),
-                    'name': u.get('Name'),
-                    'email': u.get('Email'),
-                    'password': u.get('Password')
-                }
-                for u in all_users
-            ]
-            print("✅ Current Users List:", formatted_users)
-        except Exception as e:
-            print(f"Server Log Info: {e}")
+            experience = int(experience)
+        except (ValueError, TypeError):
+            experience = 0
+        if specialization:
+            doctor_model.create_doctor(user['UserID'], specialization, experience)
+    elif role == 'Patient':
+        age = payload.get('age', 0)
+        medical_history = payload.get('medical_history', '').strip()
+        try:
+            age = int(age)
+        except (ValueError, TypeError):
+            age = 0
+        patient_model.create_patient(user['UserID'], age, medical_history)
 
-        return redirect(url_for('auth.login'))
-
-    return render_template('auth/register.html', form_data={}, errors={})
+    return jsonify({
+        'success': True,
+        'message': 'Registration successful! Please log in.',
+        'user': {
+            'UserID': user['UserID'],
+            'Email': user['Email'],
+            'Name': user['Name'],
+            'Role': user['Role'],
+            'Phone': user.get('Phone', '')
+        }
+    }), 200
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
-        remember = request.form.get('remember') == 'on'
+    if request.method == 'GET':
+        return jsonify({
+            'message': 'Sign in to your MedTrack account or Welcome Back',
+            'action': '/auth/login',
+            'method': 'POST',
+            'fields': ['email', 'password']
+        })
 
-        user = user_model.get_by_email(email)
-        if not user or not verify_password(password, user['Password']):
-            flash('Invalid email or password', 'danger')
-            return render_template('auth/login.html', email=email)
+    payload = request.get_json(silent=True) or request.form or {}
+    email = payload.get('email', '').strip().lower()
+    password = payload.get('password', '')
+    remember = payload.get('remember') in ['on', True, 'true', 1, '1']
 
-        session['user_id'] = user['UserID']
-        session['email'] = user['Email']
-        session['name'] = user['Name']
-        session['role'] = user['Role']
-        session['user'] = {
+    user = user_model.get_by_email(email)
+    if not user or not verify_password(password, user['Password']):
+        return jsonify({'success': False, 'error': 'Invalid email or password'}), 401
+
+    session['user_id'] = user['UserID']
+    session['email'] = user['Email']
+    session['name'] = user['Name']
+    session['role'] = user['Role']
+    session['user'] = {
+        'id': user['UserID'],
+        'name': user['Name'],
+        'email': user['Email'],
+        'role': user['Role']
+    }
+    session.permanent = remember
+
+    mode_str = 'Local Mode' if not Config.is_aws_mode() else 'AWS Mode'
+    return jsonify({
+        'success': True,
+        'message': f'Welcome Back, {user["Name"]}!',
+        'role': user['Role'],
+        'mode': mode_str,
+        'user': {
             'id': user['UserID'],
             'name': user['Name'],
             'email': user['Email'],
-            'role': user['Role']
+            'role': user['Role'],
+            'phone': user.get('Phone', '')
         }
-        session.permanent = remember
-
-        # SmartBridge Proof of Data Storage Server Log
-        print("👤 Logged In User Session:", session['user'])
-
-        flash(f'Welcome back, {user["Name"]}!', 'success')
-
-        next_page = request.args.get('next')
-        if next_page:
-            return redirect(next_page)
-        return redirect(url_for('auth.dashboard'))
-
-    return render_template('auth/login.html')
+    }), 200
 
 
 @auth_bp.route('/logout')
 def logout():
     session.pop('user', None)
     session.clear()
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('index'))
+    return jsonify({
+        'success': True,
+        'message': 'You have been logged out.'
+    }), 200
 
 
 @auth_bp.route('/dashboard')
 def dashboard():
     if 'user_id' not in session and 'user' not in session:
-        return redirect(url_for('auth.login'))
-
-    if 'user' in session:
-        print("👤 Current Session User Info:", session['user'])
-    else:
-        print("👤 Current Session User Info:", {
-            'id': session.get('user_id'),
-            'name': session.get('name'),
-            'email': session.get('email'),
-            'role': session.get('role')
-        })
+        return jsonify({'error': 'Authentication required', 'message': 'Please log in'}), 401
 
     role = session.get('role')
-    if role == 'Patient':
-        return redirect(url_for('patient.dashboard'))
-    elif role == 'Doctor':
-        return redirect(url_for('doctor.dashboard'))
-    elif role == 'Admin':
-        return redirect(url_for('admin.dashboard'))
-    else:
-        return redirect(url_for('auth.login'))
+    return jsonify({
+        'status': 'authenticated',
+        'user_id': session.get('user_id'),
+        'role': role,
+        'name': session.get('name'),
+        'email': session.get('email'),
+        'routes': {
+            'Patient': '/patient/dashboard',
+            'Doctor': '/doctor/dashboard',
+            'Admin': '/admin/dashboard'
+        }
+    }), 200

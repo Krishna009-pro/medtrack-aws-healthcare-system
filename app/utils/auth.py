@@ -1,6 +1,6 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-from flask import session, redirect, url_for, flash, request
+from flask import session, jsonify, request
 from app.models import user_model, doctor_model, patient_model
 
 
@@ -15,9 +15,13 @@ def verify_password(password: str, password_hash: str) -> bool:
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('Please log in to access this page.', 'warning')
-            return redirect(url_for('auth.login', next=request.url))
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Unauthorized', 'message': 'Please log in to access this page.'}), 401
+        user = user_model.get_by_id(user_id)
+        if not user:
+            session.clear()
+            return jsonify({'error': 'Session expired', 'message': 'Your session has expired. Please log in again.'}), 401
         return f(*args, **kwargs)
     return decorated_function
 
@@ -26,12 +30,15 @@ def role_required(*roles):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if 'user_id' not in session:
-                flash('Please log in to access this page.', 'warning')
-                return redirect(url_for('auth.login', next=request.url))
-            if session.get('role') not in roles:
-                flash('You do not have permission to access this page.', 'danger')
-                return redirect(url_for('auth.dashboard'))
+            user_id = session.get('user_id')
+            if not user_id:
+                return jsonify({'error': 'Unauthorized', 'message': 'Please log in to access this page.'}), 401
+            user = user_model.get_by_id(user_id)
+            if not user:
+                session.clear()
+                return jsonify({'error': 'Session expired', 'message': 'Your session has expired. Please log in again.'}), 401
+            if session.get('role') not in roles or user.get('Role') not in roles:
+                return jsonify({'error': 'Forbidden', 'message': 'You do not have permission to access this page.'}), 403
             return f(*args, **kwargs)
         return decorated_function
     return decorator
