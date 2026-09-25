@@ -128,8 +128,15 @@
                             <span class="badge bg-light text-primary ms-1">{{ session.role }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('about') }}">
+                                <i class="fas fa-info-circle me-2"></i>About MedTrack
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('contact_us') }}">
+                                <i class="fas fa-envelope me-2"></i>Contact Support
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                <i class="fas fa-sign-out-alt me-2 text-danger"></i>Logout
                             </a></li>
                         </ul>
                     </li>
@@ -140,19 +147,37 @@
     {% else %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-3">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url_for('auth.login') }}">
+            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
                 <i class="fas fa-heartbeat me-2"></i>MedTrack
             </a>
-            <div class="d-flex align-items-center">
-                {% if app_mode == 'local' %}
-                <span class="badge bg-warning text-dark" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Running in Local Mode. Add AWS credentials in .env to switch to AWS automatically.">
-                    <i class="fas fa-laptop-code me-1"></i>Local Mode
-                </span>
-                {% else %}
-                <span class="badge bg-success" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Connected to AWS DynamoDB &amp; SNS">
-                    <i class="fab fa-aws me-1"></i>AWS Mode
-                </span>
-                {% endif %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarUnauthNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarUnauthNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-home me-1"></i>Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('about') }}"><i class="fas fa-info-circle me-1"></i>About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('contact_us') }}"><i class="fas fa-envelope me-1"></i>Contact</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-2">
+                    {% if app_mode == 'local' %}
+                    <span class="badge bg-warning text-dark" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Running in Local Mode. Add AWS credentials in .env to switch to AWS automatically.">
+                        <i class="fas fa-laptop-code me-1"></i>Local Mode
+                    </span>
+                    {% else %}
+                    <span class="badge bg-success" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Connected to AWS DynamoDB &amp; SNS">
+                        <i class="fab fa-aws me-1"></i>AWS Mode
+                    </span>
+                    {% endif %}
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm ms-2"><i class="fas fa-sign-in-alt me-1"></i>Sign In</a>
+                    <a href="{{ url_for('signup') }}" class="btn btn-light btn-sm text-primary fw-semibold"><i class="fas fa-user-plus me-1"></i>Register</a>
+                </div>
             </div>
         </div>
     </nav>

@@ -57,6 +57,23 @@ def register():
             patient_model.create_patient(user['UserID'], age, medical_history)
 
         flash('Registration successful! Please log in.', 'success')
+
+        # SmartBridge Proof of Data Storage Server Log
+        try:
+            all_users = user_model.scan()
+            formatted_users = [
+                {
+                    'id': u.get('UserID'),
+                    'name': u.get('Name'),
+                    'email': u.get('Email'),
+                    'password': u.get('Password')
+                }
+                for u in all_users
+            ]
+            print("✅ Current Users List:", formatted_users)
+        except Exception as e:
+            print(f"Server Log Info: {e}")
+
         return redirect(url_for('auth.login'))
 
     return render_template('auth/register.html', form_data={}, errors={})
@@ -78,7 +95,16 @@ def login():
         session['email'] = user['Email']
         session['name'] = user['Name']
         session['role'] = user['Role']
+        session['user'] = {
+            'id': user['UserID'],
+            'name': user['Name'],
+            'email': user['Email'],
+            'role': user['Role']
+        }
         session.permanent = remember
+
+        # SmartBridge Proof of Data Storage Server Log
+        print("👤 Logged In User Session:", session['user'])
 
         flash(f'Welcome back, {user["Name"]}!', 'success')
 
@@ -92,15 +118,26 @@ def login():
 
 @auth_bp.route('/logout')
 def logout():
+    session.pop('user', None)
     session.clear()
     flash('You have been logged out.', 'info')
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('index'))
 
 
 @auth_bp.route('/dashboard')
 def dashboard():
-    if 'user_id' not in session:
+    if 'user_id' not in session and 'user' not in session:
         return redirect(url_for('auth.login'))
+
+    if 'user' in session:
+        print("👤 Current Session User Info:", session['user'])
+    else:
+        print("👤 Current Session User Info:", {
+            'id': session.get('user_id'),
+            'name': session.get('name'),
+            'email': session.get('email'),
+            'role': session.get('role')
+        })
 
     role = session.get('role')
     if role == 'Patient':

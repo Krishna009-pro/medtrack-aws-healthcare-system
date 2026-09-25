@@ -40,10 +40,81 @@ def create_app(config_name=None):
 
     @app.route('/')
     def index():
+        from flask import render_template, redirect, url_for, session
+        if 'user_id' in session or 'user' in session:
+            return redirect(url_for('home1'))
+        return render_template('index.html')
+
+    @app.route('/home1')
+    @app.route('/home')
+    def home1():
+        from flask import render_template, redirect, url_for, session
+        if 'user_id' not in session and 'user' not in session:
+            return redirect(url_for('login'))
+
+        if 'user' in session:
+            print("👤 Current Session User Info:", session['user'])
+        elif 'email' in session:
+            session['user'] = {
+                'id': session.get('user_id'),
+                'name': session.get('name'),
+                'email': session.get('email'),
+                'role': session.get('role')
+            }
+            print("👤 Current Session User Info:", session['user'])
+
+        role = session.get('role')
+        if role == 'Patient':
+            return redirect(url_for('patient.dashboard'))
+        elif role == 'Doctor':
+            return redirect(url_for('doctor.dashboard'))
+        elif role == 'Admin':
+            return redirect(url_for('admin.dashboard'))
+        return render_template('home1.html', user=session.get('user'))
+
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        from app.blueprints.auth.routes import login as auth_login
+        return auth_login()
+
+    @app.route('/signup', methods=['GET', 'POST'])
+    @app.route('/register', methods=['GET', 'POST'])
+    def signup():
+        from app.blueprints.auth.routes import register as auth_register
+        return auth_register()
+
+    @app.route('/logout')
+    def logout():
+        from app.blueprints.auth.routes import logout as auth_logout
+        return auth_logout()
+
+    @app.route('/about')
+    def about():
+        from flask import render_template
+        return render_template('about.html')
+
+    @app.route('/contact_us')
+    @app.route('/contact')
+    def contact_us():
+        from flask import render_template
+        return render_template('contact_us.html')
+
+    @app.route('/b1', methods=['GET'])
+    def b1():
         from flask import redirect, url_for, session
-        if 'user_id' in session:
-            return redirect(url_for('auth.dashboard'))
-        return redirect(url_for('auth.login'))
+        if 'user_id' not in session and 'user' not in session:
+            return redirect(url_for('login'))
+        return redirect(url_for('patient.book_appointment'))
+
+    @app.route('/tickets', methods=['GET', 'POST'])
+    def tickets():
+        from flask import redirect, url_for, session, request
+        if 'user_id' not in session and 'user' not in session:
+            return redirect(url_for('login'))
+        if request.method == 'POST':
+            from app.blueprints.patient.routes import book_appointment as patient_book
+            return patient_book()
+        return redirect(url_for('patient.appointments'))
 
     @app.route('/health')
     def health():

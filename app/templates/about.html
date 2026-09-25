@@ -1,0 +1,94 @@
+{% extends "base/base.html" %}
+
+{% block title %}About MedTrack - Cloud Healthcare Platform{% endblock %}
+
+{% block content %}
+<div class="py-4">
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-8">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill mb-2">
+                <i class="fas fa-heartbeat me-1"></i> Project Overview
+            </span>
+            <h1 class="fw-bold mb-3">About <span class="text-primary">MedTrack</span></h1>
+            <p class="lead text-muted">
+                MedTrack is a modern, cloud-based healthcare management system designed to streamline communication and coordination between doctors and patients by providing a centralized platform for booking appointments, managing medical histories, and submitting diagnosis reports.
+            </p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <a href="{{ url_for('contact_us') }}" class="btn btn-outline-primary px-4 py-2">
+                <i class="fas fa-envelope me-2"></i>Contact Support
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-3">
+                <div class="card-body text-center p-4">
+                    <div class="text-primary mb-3"><i class="fab fa-python fa-3x"></i></div>
+                    <h5 class="fw-bold">Flask Backend</h5>
+                    <p class="text-muted small mb-0">Built using modular Flask application factory with Blueprint routing, secure sessions, and input validation.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-3">
+                <div class="card-body text-center p-4">
+                    <div class="text-warning mb-3"><i class="fab fa-aws fa-3x"></i></div>
+                    <h5 class="fw-bold">AWS DynamoDB</h5>
+                    <p class="text-muted small mb-0">High-throughput NoSQL database storing users, doctors, patients, appointments, diagnoses, and notifications.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-3">
+                <div class="card-body text-center p-4">
+                    <div class="text-danger mb-3"><i class="fas fa-broadcast-tower fa-3x"></i></div>
+                    <h5 class="fw-bold">AWS SNS</h5>
+                    <p class="text-muted small mb-0">Publish/subscribe messaging service delivering appointment updates and clinical notifications via email/SMS.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-3">
+                <div class="card-body text-center p-4">
+                    <div class="text-success mb-3"><i class="fas fa-server fa-3x"></i></div>
+                    <h5 class="fw-bold">AWS EC2 &amp; IAM</h5>
+                    <p class="text-muted small mb-0">Hosted on scalable Amazon EC2 instances with strict IAM least-privilege security roles and policies.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-5 bg-white">
+        <div class="card-body">
+            <h4 class="fw-bold mb-3"><i class="fas fa-cogs text-primary me-2"></i>Dual-Mode Architecture (SmartBridge Ready)</h4>
+            <p class="text-muted">
+                MedTrack features an intelligent adaptive storage engine designed specifically for local evaluation and cloud deployment:
+            </p>
+            <div class="row g-4 mt-2">
+                <div class="col-md-6">
+                    <div class="border rounded-3 p-3 bg-light h-100">
+                        <h6 class="fw-bold text-success"><i class="fas fa-laptop-code me-2"></i>1. Local In-Memory Development Mode</h6>
+                        <ul class="text-muted small mb-0 ps-3">
+                            <li>Zero external dependencies required (no AWS account or credit card needed).</li>
+                            <li>Stores and retrieves data in fast Python dictionaries/lists with persistent JSON backup.</li>
+                            <li>Outputs real-time terminal proof logs for evaluation and testing.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="border rounded-3 p-3 bg-light h-100">
+                        <h6 class="fw-bold text-primary"><i class="fas fa-cloud-upload-alt me-2"></i>2. AWS Cloud Production Mode</h6>
+                        <ul class="text-muted small mb-0 ps-3">
+                            <li>Activated automatically when AWS credentials (e.g., from Troven Labs) are provided in <code>.env</code>.</li>
+                            <li>Directly queries Amazon DynamoDB tables with boto3 resource conditions.</li>
+                            <li>Dispatches real-time SMS and email notifications through Amazon SNS topics.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

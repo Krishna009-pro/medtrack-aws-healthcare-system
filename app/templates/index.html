@@ -1,0 +1,118 @@
+{% extends "base/base.html" %}
+
+{% block title %}Welcome to MedTrack - Cloud-Based Healthcare Management{% endblock %}
+
+{% block content %}
+<div class="row align-items-center py-5">
+    <div class="col-lg-6 mb-4 mb-lg-0">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill mb-3">
+            <i class="fas fa-shield-alt me-1"></i> AWS Cloud Powered Healthcare
+        </span>
+        <h1 class="display-4 fw-bold mb-3 text-dark">
+            Next-Generation <span class="text-primary">Healthcare Management</span> Platform
+        </h1>
+        <p class="lead text-muted mb-4">
+            MedTrack streamlines doctor-patient interactions with centralized appointment scheduling, secure medical history records, real-time notification alerts, and automated diagnosis management.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+            {% if session.user_id or session.user %}
+                <a href="{{ url_for('home1') }}" class="btn btn-primary btn-lg px-4 shadow-sm">
+                    <i class="fas fa-th-large me-2"></i>Go to Dashboard
+                </a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg px-4 shadow-sm">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </a>
+                <a href="{{ url_for('signup') }}" class="btn btn-outline-primary btn-lg px-4">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </a>
+            {% endif %}
+            <a href="{{ url_for('about') }}" class="btn btn-light btn-lg px-4 border">
+                <i class="fas fa-info-circle me-2"></i>Learn More
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="card-header bg-gradient bg-primary text-white p-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="mb-0 fw-bold"><i class="fas fa-hospital-user me-2"></i>MedTrack Platform Overview</h5>
+                        <small class="opacity-75">Dual-Mode: Local In-Memory &amp; AWS Cloud</small>
+                    </div>
+                    <span class="badge bg-white text-primary px-3 py-2 rounded-pill fw-bold">Live</span>
+                </div>
+            </div>
+            <div class="card-body p-4 bg-light">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="card h-100 border-0 shadow-sm rounded-3">
+                            <div class="card-body">
+                                <div class="text-primary mb-2"><i class="fas fa-calendar-check fa-2x"></i></div>
+                                <h6 class="fw-bold mb-1">Appointment Booking</h6>
+                                <p class="text-muted small mb-0">Browse doctors by specialty, check live time slots, and schedule visits.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="card h-100 border-0 shadow-sm rounded-3">
+                            <div class="card-body">
+                                <div class="text-success mb-2"><i class="fas fa-notes-medical fa-2x"></i></div>
+                                <h6 class="fw-bold mb-1">Diagnosis &amp; History</h6>
+                                <p class="text-muted small mb-0">Doctors submit digital diagnoses and patients access secure treatment histories.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="card h-100 border-0 shadow-sm rounded-3">
+                            <div class="card-body">
+                                <div class="text-warning mb-2"><i class="fas fa-bell fa-2x"></i></div>
+                                <h6 class="fw-bold mb-1">Real-Time Alerts</h6>
+                                <p class="text-muted small mb-0">AWS SNS dispatching notifications for booking, confirmation, and updates.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="card h-100 border-0 shadow-sm rounded-3">
+                            <div class="card-body">
+                                <div class="text-info mb-2"><i class="fas fa-lock fa-2x"></i></div>
+                                <h6 class="fw-bold mb-1">IAM &amp; Security</h6>
+                                <p class="text-muted small mb-0">Role-based access control safeguarding sensitive healthcare and medical data.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="my-5 opacity-25">
+
+<div class="row text-center mb-5">
+    <div class="col-md-4 mb-4 mb-md-0">
+        <div class="p-4 rounded-3 border bg-white shadow-sm h-100">
+            <div class="display-6 text-primary mb-2"><i class="fas fa-user-injured"></i></div>
+            <h5 class="fw-bold">For Patients</h5>
+            <p class="text-muted small mb-3">Register in seconds, book doctor consultations, track medical records, and receive SMS/email alerts.</p>
+            <a href="{{ url_for('signup') }}" class="btn btn-sm btn-outline-primary">Register as Patient</a>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4 mb-md-0">
+        <div class="p-4 rounded-3 border bg-white shadow-sm h-100">
+            <div class="display-6 text-success mb-2"><i class="fas fa-user-md"></i></div>
+            <h5 class="fw-bold">For Doctors</h5>
+            <p class="text-muted small mb-3">Manage appointments, review patient history, generate digital clinical diagnoses, and optimize schedules.</p>
+            <a href="{{ url_for('signup') }}" class="btn btn-sm btn-outline-success">Register as Doctor</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="p-4 rounded-3 border bg-white shadow-sm h-100">
+            <div class="display-6 text-warning mb-2"><i class="fas fa-cloud"></i></div>
+            <h5 class="fw-bold">AWS Cloud Architecture</h5>
+            <p class="text-muted small mb-3">Built with AWS EC2, Amazon DynamoDB, AWS SNS, and IAM with zero-dependency local fallback.</p>
+            <a href="{{ url_for('about') }}" class="btn btn-sm btn-outline-secondary">Explore Architecture</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

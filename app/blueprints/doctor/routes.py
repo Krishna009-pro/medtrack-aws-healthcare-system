@@ -177,6 +177,22 @@ def create_diagnosis(appointment_id):
 
         appointment_model.update_status(appointment_id, 'Completed')
 
+        # SmartBridge Proof of Data Storage Server Log
+        try:
+            diag_info = {
+                'diagnosis_id': diagnosis['DiagnosisID'],
+                'appointment_id': appointment_id,
+                'doctor_id': doctor['DoctorID'],
+                'patient_id': patient['PatientID'],
+                'report': report,
+                'date': diagnosis.get('Date')
+            }
+            all_diagnoses = diagnosis_model.scan()
+            print("🩺 Diagnosis Added:", diag_info)
+            print("📦 All Diagnoses:", all_diagnoses)
+        except Exception as e:
+            print(f"Diagnosis log error: {e}")
+
         sns_service.send_diagnosis_notification(
             patient_user['Email'], patient_user.get('Phone', ''),
             {'doctor_name': user['Name'], 'date': diagnosis['Date'], 'appointment_date': appointment['Date']}

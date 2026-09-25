@@ -64,18 +64,22 @@ class TestLocalModeExecution:
         client.get('/auth/logout')
 
     def test_patient_booking_and_sns_dispatch(self, client):
+        import uuid
         # Login as Patient
         res = client.post('/auth/login', data={'email': 'patient@medtrack.com', 'password': 'Patient@12345'}, follow_redirects=True)
         assert res.status_code == 200
 
-        # Book an appointment
+        # Book an appointment with a unique slot
+        unique_date = f"2026-12-{(uuid.uuid4().int % 25) + 1:02d}"
+        unique_time = f"{10 + (uuid.uuid4().int % 6):02d}:00"
+
         book_res = client.post('/patient/book', data={
             'doctor_id': 'doc-001',
-            'date': '2026-11-20',
-            'time': '14:00'
+            'date': unique_date,
+            'time': unique_time
         }, follow_redirects=True)
         assert book_res.status_code == 200
-        assert b'Appointment booked successfully' in book_res.data or b'November 20, 2026' in book_res.data
+        assert b'Appointment booked successfully' in book_res.data or b'December' in book_res.data
 
         # Verify SNS dispatched locally
         log_file = os.path.join(Config.DATA_DIR, 'sns_notifications.log')
@@ -86,7 +90,8 @@ class TestLocalModeExecution:
         client.get('/auth/logout')
 
     def test_registration_and_persistence(self, client):
-        email = "test.persistent@example.com"
+        import uuid
+        email = f"test.persistent.{uuid.uuid4().hex[:6]}@example.com"
         # Register
         reg = client.post('/auth/register', data={
             'email': email,
@@ -104,3 +109,29 @@ class TestLocalModeExecution:
         saved_user = user_model.get_by_email(email)
         assert saved_user is not None
         assert saved_user['Name'] == 'Persistent User'
+
+    def test_smartbridge_local_deployment_routes(self, client):
+        # 1. Homepage / renders index.html
+        home_res = client.get('/')
+        assert home_res.status_code == 200
+        assert b'Welcome to MedTrack' in home_res.data or b'Next-Generation' in home_res.data
+
+        # 2. About page
+        about_res = client.get('/about')
+        assert about_res.status_code == 200
+        assert b'About' in about_res.data
+        assert b'MedTrack' in about_res.data
+
+        # 3. Contact Us page
+        contact_res = client.get('/contact_us')
+        assert contact_res.status_code == 200
+        assert b'Contact' in contact_res.data
+
+        # 4. Top-level /login and /signup
+        login_res = client.get('/login')
+        assert login_res.status_code == 200
+        assert b'Sign in to your MedTrack account' in login_res.data or b'Welcome Back' in login_res.data
+
+        signup_res = client.get('/signup')
+        assert signup_res.status_code == 200
+        assert b'Create Account' in signup_res.data or b'Register' in signup_res.data
