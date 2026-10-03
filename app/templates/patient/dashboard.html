@@ -5,8 +5,9 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
+        <span class="section-kicker">Patient portal</span>
         <h2 class="fw-bold mb-1">Hello, {{ user.Name }}</h2>
-        <p class="text-secondary mb-0">Welcome to your patient health portal.</p>
+        <p class="text-secondary mb-0">Your appointments, records, and care updates in one place.</p>
     </div>
     <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary">
         <i class="fas fa-calendar-plus me-1"></i>Book New Appointment
@@ -55,7 +56,7 @@
     <div class="col-lg-8">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="fw-bold"><i class="fas fa-calendar-alt me-2 text-primary"></i>Recent Appointments</span>
+                <span><i class="fas fa-calendar-alt me-2 text-primary"></i>Recent Appointments</span>
                 <a href="{{ url_for('patient.appointments') }}" class="small text-primary text-decoration-none">View All</a>
             </div>
             <div class="card-body p-0">

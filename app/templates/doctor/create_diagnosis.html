@@ -7,6 +7,7 @@
     <div class="col-lg-8">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
+                <span class="section-kicker">Clinical documentation</span>
                 <h2 class="fw-bold mb-1">Create Diagnosis Report</h2>
                 <p class="text-secondary mb-0">Record clinical observations, treatment plans, and prescriptions</p>
             </div>
@@ -15,21 +16,17 @@
             </a>
         </div>
 
-        <div class="card p-4 shadow-sm mb-4">
-            <div class="row g-2 mb-3 text-secondary small">
-                <div class="col-md-6">
-                    <strong>Patient:</strong> {{ patient_user.Name if patient_user else 'Unknown' }} ({{ patient.Age if patient else 'N/A' }} yrs)
-                </div>
-                <div class="col-md-6">
-                    <strong>Session Date:</strong> {{ format_date(appointment.Date) }} at {{ format_time(appointment.Time) }}
-                </div>
+        <div class="card p-4 p-md-5 mb-4">
+            <div class="encounter-context mb-4">
+                <div><small>PATIENT</small><strong><i class="fas fa-user me-2 text-primary"></i>{{ patient_user.Name if patient_user else 'Unknown' }}</strong><span>{{ patient.Age if patient else 'N/A' }} years</span></div>
+                <div><small>APPOINTMENT</small><strong><i class="fas fa-calendar-day me-2 text-primary"></i>{{ format_date(appointment.Date) }}</strong><span>{{ format_time(appointment.Time) }}</span></div>
             </div>
 
             <form method="POST">
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Clinical Findings & Prescription <span class="text-danger">*</span></label>
-                    <textarea class="form-control" name="report" rows="10" required placeholder="Enter assessment, diagnostic conclusions, medications prescribed, and follow-up guidance..."></textarea>
-                    <div class="form-text">Include symptoms observed, diagnostic rationale, medication dosages, and follow-up intervals.</div>
+                    <textarea class="form-control clinical-editor" name="report" rows="10" required placeholder="Document the assessment, findings, medications, and follow-up plan..."></textarea>
+                    <div class="form-text"><i class="fas fa-circle-info me-1"></i>Include relevant findings, treatment details, and follow-up guidance.</div>
                 </div>
 
                 <div class="d-flex gap-2">

@@ -5,16 +5,16 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
+        <span class="section-kicker">Your personal health record</span>
         <h2 class="fw-bold mb-1"><i class="fas fa-file-medical text-primary me-2"></i>Medical Records & Diagnoses</h2>
-        <p class="text-secondary mb-0">Your encrypted electronic health records and clinical prescriptions</p>
+        <p class="text-secondary mb-0">Review the health notes and clinical reports shared with your care team.</p>
     </div>
 </div>
 
 <!-- Baseline Profile -->
 <div class="card p-4 shadow-sm mb-4">
-    <h5 class="fw-bold text-dark mb-2"><i class="fas fa-heart-pulse me-2 text-primary"></i>Baseline Health Profile</h5>
-    <p class="text-secondary small mb-3">Allergies, chronic conditions, and past surgical background:</p>
-    <div class="p-3 bg-light rounded text-dark" style="line-height: 1.6;">
+    <div class="record-heading mb-3"><span class="stat-icon bg-primary-subtle text-primary"><i class="fas fa-heart-pulse"></i></span><div><h5 class="fw-bold text-dark mb-1">Baseline Health Profile</h5><p class="text-secondary small mb-0">Allergies, chronic conditions, and past surgical background</p></div></div>
+    <div class="health-note">
         {{ patient.MedicalHistory if patient and patient.MedicalHistory else 'No specific medical notes recorded in your baseline profile.' }}
     </div>
 </div>
@@ -22,7 +22,8 @@
 <!-- Diagnoses Table -->
 <div class="card shadow-sm">
     <div class="card-header">
-        <span class="fw-bold"><i class="fas fa-file-signature me-2 text-primary"></i>Clinical Diagnosis Reports</span>
+        <span><i class="fas fa-file-signature me-2 text-primary"></i>Clinical Diagnosis Reports</span>
+        <span class="small text-secondary">{{ diagnoses|length }} shown</span>
     </div>
     <div class="card-body p-0">
         {% if diagnoses %}

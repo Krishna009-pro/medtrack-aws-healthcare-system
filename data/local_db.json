@@ -39,6 +39,16 @@
       "Phone": "+1-555-0103",
       "CreatedAt": "2026-09-25T10:05:33.937100",
       "UpdatedAt": "2026-09-25T10:05:33.937100"
+    },
+    "6441f110-6672-4c82-89e3-b8d064e8d813": {
+      "UserID": "6441f110-6672-4c82-89e3-b8d064e8d813",
+      "Email": "kkp1882006@gmail.com",
+      "Name": "Krushna K. Patil",
+      "Password": "scrypt:32768:8:1$6G8Om3jWLboEwEzU$fc9b1c5a0bdb16392b6f696a2c4562e785ec715df3e1220b6beea1c6d492e234386a67a3e21803c657e9f469cefe6f2ae05a13e7f352f929535d680f34b0469f",
+      "Role": "Patient",
+      "Phone": "96945345",
+      "CreatedAt": "2026-10-02T20:12:43.504846",
+      "UpdatedAt": "2026-10-02T20:12:43.504892"
     }
   },
   "medtrack-doctors": {
@@ -67,6 +77,14 @@
       "MedicalHistory": "Asthma diagnosed in 2018. Penicillin allergy. Prior appendectomy (2020).",
       "CreatedAt": "2026-09-25T10:05:33.937100",
       "UpdatedAt": "2026-09-25T10:05:33.937100"
+    },
+    "6441f110-6672-4c82-89e3-b8d064e8d813": {
+      "PatientID": "11ff47b0-305e-43d2-92b8-f54357ddc096",
+      "UserID": "6441f110-6672-4c82-89e3-b8d064e8d813",
+      "Age": 30,
+      "MedicalHistory": "AIML",
+      "CreatedAt": "2026-10-02T20:12:43.509412",
+      "UpdatedAt": "2026-10-02T20:12:43.509433"
     }
   },
   "medtrack-appointments": {

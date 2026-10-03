@@ -5,12 +5,14 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
+        <span class="section-kicker">Clinical documentation</span>
         <h2 class="fw-bold mb-1"><i class="fas fa-file-medical text-primary me-2"></i>Issued Diagnosis Reports</h2>
         <p class="text-secondary mb-0">Historical registry of all completed clinical evaluations</p>
     </div>
 </div>
 
 <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center"><span><i class="fas fa-file-signature me-2 text-primary"></i>Diagnosis archive</span><span class="small text-secondary">{{ diagnoses|length }} shown</span></div>
     <div class="card-body p-0">
         {% if diagnoses %}
         <div class="table-responsive">

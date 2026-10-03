@@ -5,8 +5,9 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
+        <span class="section-kicker">Clinician workspace</span>
         <h2 class="fw-bold mb-1">Doctor Dashboard</h2>
-        <p class="text-secondary mb-0">Welcome back, Dr. {{ user.Name }}.</p>
+        <p class="text-secondary mb-0">Your daily schedule and patient care activity at a glance.</p>
     </div>
     <div>
         <a href="{{ url_for('doctor.schedule') }}" class="btn btn-primary me-2">
@@ -68,7 +69,7 @@
     <div class="col-lg-8">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="fw-bold"><i class="fas fa-calendar-day me-2 text-primary"></i>Today's Appointments</span>
+                <span><i class="fas fa-calendar-day me-2 text-primary"></i>Today's Appointments</span>
                 <a href="{{ url_for('doctor.schedule') }}" class="small text-primary text-decoration-none">Full Schedule</a>
             </div>
             <div class="card-body p-0">

@@ -7,6 +7,7 @@
     <div class="col-lg-8">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
+                <span class="section-kicker">Clinical workspace</span>
                 <h2 class="fw-bold mb-1">Appointment Assessment</h2>
                 <p class="text-secondary mb-0">Consultation record and clinical actions</p>
             </div>
@@ -16,31 +17,27 @@
         </div>
 
         <!-- Details Card -->
-        <div class="card p-4 shadow-sm mb-4">
+        <div class="card detail-card p-4 p-md-5 mb-4">
             <div class="row g-4">
-                <div class="col-md-6 border-end">
-                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-clock me-1"></i>Consultation Metadata</h6>
-                    <p class="mb-2"><strong>Date:</strong> {{ format_date(appointment.Date) }}</p>
-                    <p class="mb-2"><strong>Time:</strong> {{ format_time(appointment.Time) }}</p>
-                    <p class="mb-0"><strong>Status:</strong>
-                        <span class="badge badge-status-{{ appointment.Status|lower }} px-2 py-1 ms-1">
-                            {{ appointment.Status }}
-                        </span>
-                    </p>
+                <div class="col-md-6">
+                    <h6 class="detail-section-title"><span class="detail-section-icon"><i class="fas fa-calendar-day"></i></span>Consultation details</h6>
+                    <div class="detail-item"><small>DATE</small><strong>{{ format_date(appointment.Date) }}</strong></div>
+                    <div class="detail-item"><small>TIME</small><strong>{{ format_time(appointment.Time) }}</strong></div>
+                    <div class="detail-item"><small>STATUS</small><span><span class="badge badge-status-{{ appointment.Status|lower }}">{{ appointment.Status }}</span></span></div>
                 </div>
                 <div class="col-md-6">
-                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-user me-1"></i>Patient Profile</h6>
-                    <p class="mb-2"><strong>Name:</strong> {{ patient_user.Name if patient_user else 'Unknown Patient' }}</p>
-                    <p class="mb-2"><strong>Age:</strong> {{ patient.Age ~ ' years' if patient and patient.Age else 'N/A' }}</p>
-                    <p class="mb-2"><strong>Email:</strong> {{ patient_user.Email if patient_user else 'N/A' }}</p>
-                    <p class="mb-0"><strong>Phone:</strong> {{ patient_user.Phone if patient_user and patient_user.Phone else 'N/A' }}</p>
+                    <h6 class="detail-section-title"><span class="detail-section-icon"><i class="fas fa-user"></i></span>Patient profile</h6>
+                    <div class="detail-item"><small>NAME</small><strong>{{ patient_user.Name if patient_user else 'Unknown Patient' }}</strong></div>
+                    <div class="detail-item"><small>AGE</small><strong>{{ patient.Age ~ ' years' if patient and patient.Age else 'N/A' }}</strong></div>
+                    <div class="detail-item"><small>EMAIL</small><strong>{{ patient_user.Email if patient_user else 'N/A' }}</strong></div>
+                    <div class="detail-item"><small>PHONE</small><strong>{{ patient_user.Phone if patient_user and patient_user.Phone else 'N/A' }}</strong></div>
                 </div>
             </div>
 
             {% if patient and patient.MedicalHistory %}
             <hr class="my-4">
             <h6 class="fw-bold text-primary mb-2"><i class="fas fa-file-medical me-1"></i>Recorded Medical History:</h6>
-            <div class="p-3 bg-light rounded small text-secondary">
+            <div class="health-note">
                 {{ patient.MedicalHistory }}
             </div>
             {% endif %}
@@ -79,7 +76,7 @@
                     {{ format_date(diagnosis.Date) }}
                 </span>
             </div>
-            <div class="p-3 bg-light rounded" style="white-space: pre-wrap; line-height: 1.6;">{{ diagnosis.Report }}</div>
+            <div class="clinical-note">{{ diagnosis.Report }}</div>
         </div>
         {% elif appointment.Status == 'Completed' %}
         <div class="card p-4 shadow-sm text-center">

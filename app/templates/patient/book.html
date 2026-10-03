@@ -7,15 +7,17 @@
     <div class="col-md-8 col-lg-6">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
+                <span class="section-kicker">Schedule a visit</span>
                 <h2 class="fw-bold mb-1"><i class="fas fa-calendar-plus text-primary me-2"></i>Book Consultation</h2>
-                <p class="text-secondary mb-0">Select an accredited specialist, date, and preferred time</p>
+                <p class="text-secondary mb-0">Choose a clinician and a time that works for you.</p>
             </div>
             <a href="{{ url_for('patient.appointments') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-1"></i>Back
             </a>
         </div>
 
-        <div class="card p-4 shadow-sm">
+        <div class="card booking-card p-4 p-md-5">
+            <div class="booking-steps mb-4"><span class="active"><i class="fas fa-user-doctor"></i><b>Specialist</b></span><i class="fas fa-chevron-right"></i><span><i class="fas fa-calendar-day"></i><b>Time</b></span><i class="fas fa-chevron-right"></i><span><i class="fas fa-circle-check"></i><b>Confirm</b></span></div>
             {% if errors %}
                 <div class="alert alert-danger py-2 small mb-3">
                     <ul class="mb-0 ps-3">
@@ -47,21 +49,10 @@
 
                 <div class="mb-4">
                     <label class="form-label">Consultation Time Slot <span class="text-danger">*</span></label>
-                    <select class="form-select" name="time" id="slotSelect" required>
-                        <option value="">-- Select Date First --</option>
-                        <option value="09:00">09:00 AM</option>
-                        <option value="09:30">09:30 AM</option>
-                        <option value="10:00">10:00 AM</option>
-                        <option value="10:30">10:30 AM</option>
-                        <option value="11:00">11:00 AM</option>
-                        <option value="11:30">11:30 AM</option>
-                        <option value="14:00">02:00 PM</option>
-                        <option value="14:30">02:30 PM</option>
-                        <option value="15:00">03:00 PM</option>
-                        <option value="15:30">03:30 PM</option>
-                        <option value="16:00">04:00 PM</option>
+                    <select class="form-select" name="time" id="slotSelect" data-selected-time="{{ form_data.get('time', '') if form_data else '' }}" required>
+                        <option value="">Select a specialist and date first</option>
                     </select>
-                    <div id="slotHelp" class="form-text small text-secondary">Slots update automatically based on clinician availability.</div>
+                    <div id="slotHelp" class="form-text small text-secondary"><i class="fas fa-circle-info me-1"></i>Available times update when you select a clinician and date.</div>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
@@ -86,11 +77,23 @@ function loadAvailableSlots() {
     var doctorId = document.getElementById('doctorSelect').value;
     var date = document.getElementById('appointmentDate').value;
     var slotSelect = document.getElementById('slotSelect');
+    var selectedTime = slotSelect.dataset.selectedTime;
 
-    if (!doctorId || !date) return;
+    slotSelect.disabled = true;
+    if (!doctorId || !date) {
+        slotSelect.innerHTML = '<option value="">Select a specialist and date first</option>';
+        document.getElementById('slotHelp').innerHTML = '<i class="fas fa-circle-info me-1"></i>Choose a clinician and date to see available times.';
+        return;
+    }
+
+    slotSelect.innerHTML = '<option value="">Checking availability…</option>';
+    document.getElementById('slotHelp').innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Checking available times';
 
     fetch(`{{ url_for('patient.api_available_slots') }}?doctor_id=${doctorId}&date=${date}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Availability request failed');
+            return response.json();
+        })
         .then(data => {
             if (data.slots && data.slots.length > 0) {
                 slotSelect.innerHTML = '';
@@ -98,11 +101,21 @@ function loadAvailableSlots() {
                     var opt = document.createElement('option');
                     opt.value = slot;
                     opt.textContent = slot;
+                    if (slot === selectedTime) opt.selected = true;
                     slotSelect.appendChild(opt);
                 });
+                slotSelect.dataset.selectedTime = slotSelect.value;
+                slotSelect.disabled = false;
+                document.getElementById('slotHelp').innerHTML = '<i class="fas fa-circle-check me-1 text-success"></i>Choose one of the available times.';
+            } else {
+                slotSelect.innerHTML = '<option value="">No times available for this date</option>';
+                document.getElementById('slotHelp').innerHTML = '<i class="fas fa-circle-info me-1"></i>Try another date or choose a different specialist.';
             }
         })
-        .catch(err => console.log('Slot fetch info:', err));
+        .catch(() => {
+            slotSelect.innerHTML = '<option value="">Availability could not be loaded</option>';
+            document.getElementById('slotHelp').innerHTML = '<i class="fas fa-triangle-exclamation me-1 text-warning"></i>Please try again in a moment.';
+        });
 }
 </script>
 {% endblock %}

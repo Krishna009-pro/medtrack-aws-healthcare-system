@@ -5,6 +5,7 @@
 {% block content %}
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
+        <span class="section-kicker">Practice management</span>
         <h2 class="fw-bold mb-1"><i class="fas fa-clock text-primary me-2"></i>Daily Shift Schedule</h2>
         <p class="text-secondary mb-0">Roster overview for <strong>{{ format_date(date) }}</strong></p>
     </div>
@@ -18,7 +19,16 @@
     </form>
 </div>
 
+{% set slot_counts = namespace(open=0) %}
+{% for slot in all_slots %}{% if slot not in booked_slots %}{% set slot_counts.open = slot_counts.open + 1 %}{% endif %}{% endfor %}
+<div class="row g-3 mb-4 schedule-summary">
+    <div class="col-sm-6 col-lg-4"><div class="schedule-stat"><span class="stat-icon bg-primary-subtle text-primary"><i class="fas fa-list-check"></i></span><div><small>TIME SLOTS</small><strong>{{ all_slots|length }}</strong></div></div></div>
+    <div class="col-sm-6 col-lg-4"><div class="schedule-stat"><span class="stat-icon bg-success-subtle text-success"><i class="fas fa-calendar-check"></i></span><div><small>BOOKED VISITS</small><strong>{{ booked_slots|length }}</strong></div></div></div>
+    <div class="col-sm-6 col-lg-4"><div class="schedule-stat"><span class="stat-icon bg-info-subtle text-info"><i class="fas fa-clock"></i></span><div><small>OPEN SLOTS</small><strong>{{ slot_counts.open }}</strong></div></div></div>
+</div>
+
 <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center"><span><i class="fas fa-calendar-day text-primary me-2"></i>Availability for {{ format_date(date) }}</span><span class="small text-secondary">Select a visit to review its details</span></div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-simple">
