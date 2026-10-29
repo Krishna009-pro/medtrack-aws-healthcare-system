@@ -108,24 +108,48 @@ flowchart TB
 
 ## Dual-Mode Architecture: Local Mode vs. AWS Cloud Mode
 
-MedTrack features an **adaptive dual-mode architecture**. If you do not have AWS credentials yet, the system runs in a **100% self-contained Local Mode**. The moment you configure AWS credentials, it **automatically switches** to live AWS services without requiring any code changes.
+MedTrack features an **adaptive dual-mode architecture**. When Boto3 cannot find credentials, the system runs in self-contained Local Mode. When credentials are available through Boto3's standard provider chain, including an EC2 instance profile, it selects AWS Mode without requiring AWS access keys in the application environment.
 
 ### Mode Comparison Matrix
 
 | Component | Local Mode (No Credentials) | AWS Cloud Mode (Credentials Present) |
 | :--- | :--- | :--- |
-| **Trigger** | `AWS_ACCESS_KEY_ID` is empty / placeholder, or `AWS_MODE=local` | Valid AWS credentials in `.env`, environment, or EC2 IAM Role |
+| **Trigger** | `AWS_MODE=local`, or Boto3 cannot find credentials | Boto3 finds credentials in its standard provider chain, including an EC2 instance profile |
 | **Database** | JSON-backed DynamoDB mock engine (`data/local_db.json`) | Live **Amazon DynamoDB** tables with Global Secondary Indexes |
 | **Notifications** | Dispatches to console, logs to `data/sns_notifications.log`, & creates in-app alerts | Dispatches real-time SMS and email alerts via **AWS SNS** |
-| **Dependencies** | Runs with pure standard libraries + Flask (no `boto3` crash) | Uses **Boto3** SDK to communicate with AWS APIs |
+| **Dependencies** | Runs with Flask and the app's local storage adapter | Uses **Boto3** SDK to communicate with AWS APIs |
 | **UI Indicator** | Amber `<span class="badge bg-warning">Local Mode</span>` badge | Green `<span class="badge bg-success">AWS Mode</span>` badge |
 | **Health API** | `{"status": "healthy", "mode": "local", "aws_enabled": false}` | `{"status": "healthy", "mode": "aws", "aws_enabled": true}` |
 
 ### Ready-To-Use Local Test Accounts
 When running in Local Mode, the database automatically initializes with sample seed records:
-- **Administrator:** `admin@medtrack.com` / `Admin@12345` (Admin portal, audits, full records)
-- **Doctor:** `doctor@medtrack.com` / `Doctor@12345` (Schedule, patient list, diagnosis portal)
-- **Patient:** `patient@medtrack.com` / `Patient@12345` (Booking, medical history, notifications)
+- **Administrator:** `admin@medtrack.com` (Local Mode demo only)
+- **Doctor:** `doctor@medtrack.com` (Local Mode demo only)
+- **Patient:** `patient@medtrack.com` (Local Mode demo only)
+The sample passwords are documented in the local-only `docs/MEDTRACK_SPECIFICATION.md`; do not use those accounts or passwords in an AWS deployment.
+
+### How to Use AWS on EC2 Without Stored Access Keys
+
+Attach an IAM role (instance profile) to the EC2 instance before starting MedTrack. Boto3 retrieves and refreshes temporary role credentials through EC2 instance metadata; do not copy access keys into `.env` or source code. In `auto` mode, MedTrack checks the Boto3 credential chain and selects AWS Mode when the role is available.
+
+Set non-secret configuration in the shell or service environment:
+
+```bash
+export AWS_MODE=auto
+export AWS_DEFAULT_REGION=us-east-1
+export SNS_TOPIC_ARN=arn:aws:sns:us-east-1:ACCOUNT_ID:MedTrack-Alerts
+export FLASK_ENV=production
+export FLASK_DEBUG=False
+export SECRET_KEY='replace-with-a-long-random-production-secret'
+
+# Run once if the DynamoDB tables and indexes have not been created yet.
+python scripts/init_dynamodb.py
+
+# Start the web app
+python app.py
+```
+
+`AWS_REGION` is also supported and takes precedence over `AWS_DEFAULT_REGION`. `SNS_TOPIC_ARN` is enough when one topic handles both notification types; use the two dedicated topic variables when you want separate topics. The EC2 role must allow the application's DynamoDB read/write/query actions and `sns:Publish` on these resources. The initializer requires `dynamodb:CreateTable`; use a role with that permission for first-time setup, then use the runtime role with narrower permissions. `python app.py` listens on port 5000 by default. Set `FLASK_DEBUG=False` on EC2. For production traffic, run Gunicorn behind Nginx as described in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ### How to Switch Between Modes
 1. **To run locally (Default):**
@@ -133,15 +157,8 @@ When running in Local Mode, the database automatically initializes with sample s
    python run.py
    ```
    Open `http://localhost:5000` to immediately register, log in, book appointments, and write diagnoses.
-2. **To switch to AWS Cloud:**
-   Open `.env` and fill in your AWS credentials:
-   ```env
-   AWS_MODE=auto
-   AWS_REGION=us-east-1
-   AWS_ACCESS_KEY_ID=AKIA...
-   AWS_SECRET_ACCESS_KEY=wJalr...
-   ```
-   Restart `run.py`. MedTrack detects the credentials and automatically connects to live AWS DynamoDB and SNS!
+2. **To use AWS Cloud:**
+   On EC2, attach an IAM role and set the region and SNS topic ARNs as shown above. For a development machine, configure credentials using the AWS CLI/shared credentials profile or environment variables. Restart the application after changing its mode or configuration.
 
 ---
 
@@ -149,7 +166,7 @@ When running in Local Mode, the database automatically initializes with sample s
 
 ### 1. Environment Setup & Cloud Configuration
 - Provision Python 3.10+ virtual environment and install dependencies: `Flask`, `boto3`, `gunicorn`.
-- Configure AWS credentials and region settings using AWS CLI.
+- Attach an EC2 instance profile for runtime AWS credentials. Set only non-secret region and SNS topic configuration in the application environment.
 - Set up an Amazon EC2 instance with Amazon Linux AMI inside an Amazon VPC.
 - Attach an IAM Instance Profile to EC2 with explicit policies for DynamoDB read/write and SNS publish actions.
 
@@ -176,7 +193,7 @@ When running in Local Mode, the database automatically initializes with sample s
 
 ### 5. Secure Access Control with IAM
 - Construct IAM policies adhering to least privilege:
-  - Policy for EC2 instance role allowing only `dynamodb:GetItem`, `dynamodb:PutItem`, `dynamodb:UpdateItem`, `dynamodb:Query` and `sns:Publish`.
+  - Runtime EC2 role permissions should cover the DynamoDB read, write, query, and scan operations the app uses, plus `sns:Publish` for the configured topic. Grant `dynamodb:CreateTable` only to the one-time table setup role.
 - Prevent exposure of AWS access keys by utilizing instance metadata service (IMDSv2).
 
 ### 6. Deployment on AWS EC2

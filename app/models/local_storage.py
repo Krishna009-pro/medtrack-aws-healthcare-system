@@ -1,7 +1,7 @@
 """
 Local Storage & Mock Engine for AWS DynamoDB
 Provides offline, in-memory, and JSON-backed persistence when AWS credentials are not available.
-Automatically switches to AWS DynamoDB when valid credentials are provided.
+Automatically switches to AWS DynamoDB when Boto3 finds credentials (including EC2 instance roles).
 """
 
 import os

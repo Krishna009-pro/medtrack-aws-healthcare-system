@@ -93,6 +93,7 @@ def create_app(config_name=None):
             'service': 'medtrack',
             'mode': Config.get_mode(),
             'aws_enabled': Config.is_aws_mode(),
+            'database_backend': getattr(__import__('app.models.dynamodb', fromlist=['db']).db, 'mode', 'unknown'),
             'aws_region': Config.AWS_REGION
         }
 

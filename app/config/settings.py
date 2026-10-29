@@ -7,15 +7,16 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
     FLASK_ENV = os.getenv('FLASK_ENV', 'development')
-    FLASK_DEBUG = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
+    FLASK_DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
 
     # Execution Mode: 'auto', 'local', or 'aws'
     AWS_MODE = os.getenv('AWS_MODE', 'auto').lower()
 
     # AWS Credentials and Configuration
-    AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
+    AWS_REGION = os.getenv('AWS_REGION') or os.getenv('AWS_DEFAULT_REGION') or 'us-east-1'
     AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+    AWS_SESSION_TOKEN = os.getenv('AWS_SESSION_TOKEN')
     AWS_ENDPOINT_URL = os.getenv('AWS_ENDPOINT_URL')
     SNS_ENDPOINT_URL = os.getenv('SNS_ENDPOINT_URL')
 
@@ -34,39 +35,32 @@ class Config:
     DYNAMODB_NOTIFICATIONS_TABLE = os.getenv('DYNAMODB_NOTIFICATIONS_TABLE', 'medtrack-notifications')
 
     # SNS Topics
-    SNS_APPOINTMENT_ALERTS_TOPIC = os.getenv('SNS_APPOINTMENT_ALERTS_TOPIC')
-    SNS_DIAGNOSIS_UPDATES_TOPIC = os.getenv('SNS_DIAGNOSIS_UPDATES_TOPIC')
+    SNS_TOPIC_ARN = os.getenv('SNS_TOPIC_ARN')
+    SNS_APPOINTMENT_ALERTS_TOPIC = os.getenv('SNS_APPOINTMENT_ALERTS_TOPIC') or SNS_TOPIC_ARN
+    SNS_DIAGNOSIS_UPDATES_TOPIC = os.getenv('SNS_DIAGNOSIS_UPDATES_TOPIC') or SNS_TOPIC_ARN
 
     APP_URL = os.getenv('APP_URL', 'http://localhost:5000')
 
     @classmethod
     def has_aws_credentials(cls) -> bool:
-        """Check if valid AWS credentials or instance metadata credentials are present."""
+        """Detect credentials through Boto3's full provider chain, including EC2 roles."""
         if cls.AWS_MODE == 'local':
             return False
-
-        key = (os.getenv('AWS_ACCESS_KEY_ID') or '').strip()
-        secret = (os.getenv('AWS_SECRET_ACCESS_KEY') or '').strip()
-
-        # Reject common placeholder strings from .env templates
-        placeholders = {
-            'your-access-key', 'your-secret-key', 'your-access-key-id',
-            'your-secret-access-key', 'test', 'none', 'placeholder', 'xxx', ''
-        }
-        if key and secret and (key.lower() not in placeholders) and (secret.lower() not in placeholders):
+        if cls.AWS_MODE == 'aws':
             return True
-
-        # Check for EC2 instance profile / ECS IAM role environment variables
-        if os.getenv('AWS_CONTAINER_CREDENTIALS_RELATIVE_URI') or os.getenv('AWS_EXECUTION_ENV'):
-            return True
-
-        return False
+        try:
+            import boto3
+            return boto3.Session(region_name=cls.AWS_REGION).get_credentials() is not None
+        except Exception:
+            return False
 
     @classmethod
     def is_aws_mode(cls) -> bool:
         """
         Determines whether to execute in AWS Cloud Mode or Local Mock Mode.
-        Automatically falls back to Local Mode if boto3 is not installed or credentials are absent.
+        Automatically falls back to Local Mode if boto3 is not installed or the
+        standard Boto3 credential chain cannot find credentials. On EC2 this
+        chain can retrieve temporary credentials from the attached instance role.
         """
         if cls.AWS_MODE == 'local':
             return False

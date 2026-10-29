@@ -42,6 +42,7 @@ def Attr(name: str):
 
 class DynamoDBClient:
     _instance = None
+    initialization_error = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -50,13 +51,17 @@ class DynamoDBClient:
         return cls._instance
 
     def _init_client(self):
+        self.initialization_error = None
         if Config.is_aws_mode() and BOTO3_AVAILABLE:
             try:
-                kwargs = {
-                    'region_name': Config.AWS_REGION,
-                    'aws_access_key_id': Config.AWS_ACCESS_KEY_ID,
-                    'aws_secret_access_key': Config.AWS_SECRET_ACCESS_KEY
-                }
+                # Omit explicit credentials when unset so Boto3 can use the
+                # EC2 instance-profile provider (including refreshable tokens).
+                kwargs = {'region_name': Config.AWS_REGION}
+                if Config.AWS_ACCESS_KEY_ID and Config.AWS_SECRET_ACCESS_KEY:
+                    kwargs['aws_access_key_id'] = Config.AWS_ACCESS_KEY_ID
+                    kwargs['aws_secret_access_key'] = Config.AWS_SECRET_ACCESS_KEY
+                    if Config.AWS_SESSION_TOKEN:
+                        kwargs['aws_session_token'] = Config.AWS_SESSION_TOKEN
                 if Config.AWS_ENDPOINT_URL:
                     kwargs['endpoint_url'] = Config.AWS_ENDPOINT_URL
 
@@ -66,12 +71,13 @@ class DynamoDBClient:
                 print(f"[MedTrack] Connected to AWS DynamoDB (Region: {Config.AWS_REGION})")
                 return
             except Exception as e:
+                self.initialization_error = e
                 print(f"[MedTrack] Warning: Failed to connect to AWS DynamoDB ({e}). Falling back to Local Mode.")
 
         self.mode = 'local'
         self.dynamodb = LocalDynamoDBResource()
         self.client = LocalDynamoDBClientMock()
-        print("[MedTrack] Running in LOCAL MODE (Local Mock Storage). Set valid AWS credentials to automatically switch to AWS.")
+        print("[MedTrack] Running in LOCAL MODE (Local Mock Storage). To use AWS, attach an EC2 instance role or configure another Boto3 credential provider.")
 
     def get_table(self, table_name: str):
         return self.dynamodb.Table(table_name)

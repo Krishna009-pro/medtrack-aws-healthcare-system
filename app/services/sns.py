@@ -53,6 +53,7 @@ class LocalSNSClientMock:
 
 class SNSService:
     _instance = None
+    initialization_error = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -61,13 +62,17 @@ class SNSService:
         return cls._instance
 
     def _init_client(self):
+        self.initialization_error = None
         if Config.is_aws_mode() and BOTO3_AVAILABLE:
             try:
-                kwargs = {
-                    'region_name': Config.AWS_REGION,
-                    'aws_access_key_id': Config.AWS_ACCESS_KEY_ID,
-                    'aws_secret_access_key': Config.AWS_SECRET_ACCESS_KEY
-                }
+                # Let Boto3 obtain temporary EC2 role credentials when static
+                # access keys are not configured.
+                kwargs = {'region_name': Config.AWS_REGION}
+                if Config.AWS_ACCESS_KEY_ID and Config.AWS_SECRET_ACCESS_KEY:
+                    kwargs['aws_access_key_id'] = Config.AWS_ACCESS_KEY_ID
+                    kwargs['aws_secret_access_key'] = Config.AWS_SECRET_ACCESS_KEY
+                    if Config.AWS_SESSION_TOKEN:
+                        kwargs['aws_session_token'] = Config.AWS_SESSION_TOKEN
                 if Config.SNS_ENDPOINT_URL:
                     kwargs['endpoint_url'] = Config.SNS_ENDPOINT_URL
 
@@ -76,11 +81,12 @@ class SNSService:
                 print(f"[MedTrack] Connected to AWS SNS (Region: {Config.AWS_REGION})")
                 return
             except Exception as e:
+                self.initialization_error = e
                 print(f"[MedTrack] Warning: Failed to connect to AWS SNS ({e}). Falling back to Local Mode.")
 
         self.mode = 'local'
         self.sns = LocalSNSClientMock()
-        print("[MedTrack] SNS Service running in LOCAL MODE (Dispatched notifications saved to data/sns_notifications.log).")
+        print("[MedTrack] SNS Service running in LOCAL MODE (Dispatched notifications saved to data/sns_notifications.log). To publish to AWS, attach an EC2 instance role or configure another Boto3 credential provider.")
 
     def publish(self, topic_arn: str, message: str, subject: str = None) -> Dict[str, Any]:
         if self.mode == 'local':

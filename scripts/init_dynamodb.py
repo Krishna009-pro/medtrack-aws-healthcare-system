@@ -66,8 +66,8 @@ def main():
         print("    * Doctor:  doctor@medtrack.com  / Doctor@12345")
         print("    * Patient: patient@medtrack.com / Patient@12345")
         print()
-        print("NOTE: When you add AWS credentials to .env, this script will")
-        print("automatically switch to provisioning real AWS DynamoDB tables.")
+        print("NOTE: To provision AWS tables, attach an EC2 IAM instance role")
+        print("or configure another Boto3 credential provider, then retry.")
         print("=" * 65)
         return
 

@@ -103,18 +103,39 @@ flowchart TB
 
 ## Dual-Mode Architecture: Local Mode vs. AWS Cloud Mode
 
-MedTrack features an **adaptive dual-mode architecture**. If you do not have AWS credentials yet, the system runs in a **100% self-contained Local Mode**. The moment you configure AWS credentials, it **automatically switches** to live AWS services without requiring any code changes.
+MedTrack features an adaptive dual-mode architecture. If Boto3 cannot find AWS credentials, the system runs in Local Mode. When Boto3 finds credentials in its standard provider chain, including an EC2 instance profile, `AWS_MODE=auto` selects live AWS services. No static access keys need to be stored on EC2.
 
 ### Mode Comparison Matrix
 
 | Component | Local Mode (No Credentials) | AWS Cloud Mode (Credentials Present) |
 | :--- | :--- | :--- |
-| **Trigger** | `AWS_ACCESS_KEY_ID` is empty / placeholder, or `AWS_MODE=local` | Valid AWS credentials in `.env`, environment, or EC2 IAM Role |
+| **Trigger** | `AWS_MODE=local`, or Boto3 finds no credentials | Boto3 provider chain finds credentials, including an EC2 IAM instance profile |
 | **Database** | JSON-backed DynamoDB mock engine (`data/local_db.json`) | Live **Amazon DynamoDB** tables with Global Secondary Indexes |
 | **Notifications** | Dispatches to console, logs to `data/sns_notifications.log`, & creates in-app alerts | Dispatches real-time SMS and email alerts via **AWS SNS** |
 | **Dependencies** | Runs with pure standard libraries + Flask (no `boto3` crash) | Uses **Boto3** SDK to communicate with AWS APIs |
 | **UI Indicator** | Amber `<span class="badge bg-warning">Local Mode</span>` badge | Green `<span class="badge bg-success">AWS Mode</span>` badge |
 | **Health API** | `{"status": "healthy", "mode": "local", "aws_enabled": false}` | `{"status": "healthy", "mode": "aws", "aws_enabled": true}` |
+
+### EC2 Setup Without Access Keys
+
+Attach an IAM role to the EC2 instance. Boto3 retrieves and refreshes temporary credentials from EC2 instance metadata; do not add access keys to `.env` or source code. Set the following non-secret configuration in the shell or systemd environment:
+
+```bash
+export AWS_MODE=auto
+export AWS_DEFAULT_REGION=us-east-1
+export SNS_TOPIC_ARN=arn:aws:sns:us-east-1:ACCOUNT_ID:MedTrack-Alerts
+export FLASK_ENV=production
+export FLASK_DEBUG=False
+export SECRET_KEY='replace-with-a-long-random-production-secret'
+
+# Run once to create the required DynamoDB tables and GSIs
+python scripts/init_dynamodb.py
+
+# Start the Flask web server
+python app.py
+```
+
+`AWS_REGION` is also supported and takes precedence over `AWS_DEFAULT_REGION`. A single SNS topic can be configured with `SNS_TOPIC_ARN`; separate appointment and diagnosis topics are preferred. The instance role needs access to the configured DynamoDB tables and `sns:Publish` for the SNS topic ARNs. Create the DynamoDB tables and GSIs once with `python scripts/init_dynamodb.py` under a setup role that has `dynamodb:CreateTable`; `app.py` does not create them.
 
 ### Ready-To-Use Local Test Accounts
 When running in Local Mode, the database automatically initializes with sample seed records:
