@@ -19,23 +19,50 @@ from app.config import Config
 from app.models.dynamodb import db
 
 
-def create_table(table_name, key_schema, attribute_definitions, global_secondary_indexes=None, billing_mode='PAY_PER_REQUEST'):
+def create_table(
+    table_name,
+    key_schema,
+    attribute_definitions,
+    global_secondary_indexes=None,
+    billing_mode='PAY_PER_REQUEST',
+    provisioned_throughput=None,
+):
     """Create a DynamoDB table"""
     try:
         client = db.client
-        
+
         params = {
             'TableName': table_name,
             'KeySchema': key_schema,
             'AttributeDefinitions': attribute_definitions,
             'BillingMode': billing_mode
         }
-        
+
+        # DynamoDB rejects throughput settings for on-demand tables and GSIs.
+        # Include table and index capacity only in provisioned mode.
+        if billing_mode == 'PROVISIONED':
+            params['ProvisionedThroughput'] = provisioned_throughput or {
+                'ReadCapacityUnits': 5,
+                'WriteCapacityUnits': 5
+            }
+
         if global_secondary_indexes:
-            params['GlobalSecondaryIndexes'] = global_secondary_indexes
-        
+            indexes = []
+            for index in global_secondary_indexes:
+                index_params = {
+                    key: value for key, value in index.items()
+                    if key != 'ProvisionedThroughput'
+                }
+                if billing_mode == 'PROVISIONED':
+                    index_params['ProvisionedThroughput'] = index.get(
+                        'ProvisionedThroughput',
+                        {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
+                    )
+                indexes.append(index_params)
+            params['GlobalSecondaryIndexes'] = indexes
+
         client.create_table(**params)
-        
+
         waiter = client.get_waiter('table_exists')
         waiter.wait(TableName=table_name)
         
@@ -209,17 +236,7 @@ def main():
     
     all_success = True
     for table in tables:
-        gsi_list = []
-        for gsi in table.get('gsis', []):
-            gsi_list.append({
-                'IndexName': gsi['IndexName'],
-                'KeySchema': gsi['KeySchema'],
-                'Projection': gsi['Projection'],
-                'ProvisionedThroughput': gsi.get('ProvisionedThroughput', {
-                    'ReadCapacityUnits': 5,
-                    'WriteCapacityUnits': 5
-                })
-            })
+        gsi_list = table.get('gsis', [])
         
         success = create_table(
             table['name'],

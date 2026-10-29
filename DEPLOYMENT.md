@@ -89,7 +89,7 @@ aws iam create-role \
 
 ### 2. Attach Policies
 
-The role used for first-time setup needs the runtime actions below, plus `dynamodb:CreateTable` and `dynamodb:UpdateTable` for GSIs. Its DynamoDB resources must include all six tables and their indexes. Replace the SNS ARN with the exact topic ARN(s); this sample uses a single SNS topic for both notification types.
+The role used for first-time setup needs the runtime actions below, plus `dynamodb:CreateTable`. The initializer creates each table with its GSIs in the same request. The DynamoDB resources must include all six tables and their indexes. Replace the SNS ARN with the exact topic ARN(s); this sample uses a single SNS topic for both notification types.
 
 ```bash
 # Create policy for DynamoDB access
@@ -107,8 +107,7 @@ cat > dynamodb-policy.json <<EOF
         "dynamodb:Query",
         "dynamodb:Scan",
         "dynamodb:DescribeTable",
-        "dynamodb:CreateTable",
-        "dynamodb:UpdateTable"
+        "dynamodb:CreateTable"
       ],
       "Resource": [
         "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/medtrack-*",
@@ -148,7 +147,7 @@ aws iam put-role-policy \
   --policy-document file://sns-policy.json
 ```
 
-After the six tables and GSIs are created, remove `dynamodb:CreateTable` and `dynamodb:UpdateTable` from the instance role policy. If you use two SNS topics, include both exact topic ARNs. IAM changes can take a short time to propagate.
+After the six tables and GSIs are created, remove `dynamodb:CreateTable` from the instance role policy if it is not needed at runtime. If you use two SNS topics, include both exact topic ARNs. IAM changes can take a short time to propagate.
 
 ### 3. Create Instance Profile
 
@@ -207,7 +206,8 @@ systemctl start medtrack
 
 ```bash
 # Use the EC2 instance role or another configured Boto3 credential provider.
-# This initialization command requires dynamodb:CreateTable permissions.
+# The on-demand table and GSI definitions are created together by this command.
+# The role running it needs dynamodb:CreateTable.
 python scripts/init_dynamodb.py
 ```
 
