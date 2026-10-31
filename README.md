@@ -1,372 +1,119 @@
-# MedTrack: Cloud-Based Healthcare Management System
+# MedTrack — Healthcare Management System
 
-## Live Demo & Project Report
+MedTrack is a Flask web application for patient and clinician workflows. Patients can create accounts, find doctors, book appointments, and review medical history. Doctors can manage schedules, review appointments, and submit diagnosis reports. The application supports local development and AWS-backed operation with DynamoDB and SNS.
 
-- 🚀 **AWS EC2 Live Deployment:** [Open MedTrack](http://3.94.64.130:5000/)
-- 🌐 **Render Deployment:** [Open MedTrack on Render](https://medtrack-aws-healthcare-system.onrender.com)
-- 🎥 **Walkthrough & Demo Video:** [Watch the project demo](https://drive.google.com/file/d/1B_X2V7ITx84ZhDU0fs945yEgdlitlXAb/view?usp=sharing)
-- 📄 **Project Report:** [Download the MedTrack project documentation](docs/MedTrack_Project_Documentation.docx)
+## Live Demo and Project Materials
 
-## Executive Overview
+| Resource | Link |
+| --- | --- |
+| AWS EC2 deployment | [Open MedTrack](http://3.94.64.130:5000/) |
+| Render deployment | [Open MedTrack on Render](https://medtrack-aws-healthcare-system.onrender.com) |
+| Walkthrough video | [Watch the demo](https://drive.google.com/file/d/1B_X2V7ITx84ZhDU0fs945yEgdlitlXAb/view?usp=sharing) |
+| Project report | [Download the project documentation](docs/MedTrack_Project_Documentation.docx) |
+| Deployment instructions | [Read DEPLOYMENT.md](DEPLOYMENT.md) |
 
-In today’s fast-evolving healthcare landscape, efficient communication and coordination between doctors and patients are crucial. **MedTrack** is a robust, cloud-powered healthcare management platform designed to streamline patient–doctor interactions by providing a centralized platform for booking appointments, managing medical histories, and enabling diagnosis submissions.
+## Features
 
-The platform addresses critical operational bottlenecks in modern healthcare by leveraging **Flask** for backend development, **AWS EC2** for scalable cloud hosting, and **Amazon DynamoDB** for resilient, high-performance NoSQL data management. Real-time notifications powered by **AWS SNS** ensure seamless communication regarding appointment confirmations, schedule updates, and diagnostic reports. Security and compliance are strictly enforced through **AWS Identity and Access Management (IAM)**, granting least-privilege, role-based access control (RBAC) to protect sensitive patient health data.
+- Patient and doctor registration and sign-in, with role-based pages.
+- Doctor directory and appointment booking with available time slots.
+- Doctor schedule and appointment status management.
+- Patient medical history and doctor-submitted diagnosis reports.
+- In-app notifications and optional AWS SNS topic publishing.
+- Local mode for development and AWS mode for DynamoDB/SNS deployments.
 
----
+## Screenshots
 
-## Key Project Scenarios
+### Home page
+![MedTrack home page](docs/web_screenshots/01-home-page.png)
 
-### Scenario 1: Efficient Appointment Booking System for Patients
-AWS EC2 provides high-availability infrastructure capable of handling high concurrent patient traffic. Patients log in, navigate to the booking interface, and submit appointment requests with specialized doctors in real time. Flask orchestrates backend operations, validating time slots, saving records to DynamoDB, and triggering instant notification events via AWS SNS.
+### Create account
+![Create account page](docs/web_screenshots/02-create-account.png)
 
-### Scenario 2: Secure User Management with IAM
-MedTrack employs AWS IAM to enforce role-based access control and principle of least privilege. Patient accounts are restricted to personal appointment booking and historical health records. Doctor roles grant access to assigned patient records and diagnostic workflows. AWS IAM service roles and instance profiles ensure the EC2 application layer interacts securely with AWS DynamoDB and SNS without hardcoding sensitive credentials.
+### Doctor schedule
+![Doctor schedule](docs/web_screenshots/03-doctor-schedule.png)
 
-### Scenario 3: Easy Access to Medical History and Resources
-Doctors and patients access comprehensive medical histories and diagnostic files on demand. When a doctor logs in, upcoming appointments and patient clinical backgrounds are retrieved in real time from DynamoDB. Diagnoses and clinical notes can be authored, uploaded, and linked directly to appointment records with instant status synchronization.
+### Doctor dashboard
+![Doctor dashboard](docs/web_screenshots/04-doctor-dashboard.png)
 
----
+### Patient appointment booking
+![Patient appointment booking](docs/web_screenshots/05-patient-book-visit.png)
 
-## Project Stats & Skills
+### Patient doctor directory
+![Patient doctor directory](docs/web_screenshots/06-patient-doctors.png)
 
-### Project Statistics
-| Metric | Value |
-| :--- | :--- |
-| **Total Epics** | 12 |
-| **Total Tasks** | 18 |
-| **Total Subtasks** | 0 |
-| **Mentor Status** | No mentor assigned yet |
-| **Target Career Roles** | Healthcare IT, Cloud Developer, Cloud Support Engineer |
+## Technology
 
-### Core Skills & Technologies
-- **Compute & Hosting:** AWS EC2, Amazon Linux AMI, Gunicorn, Nginx
-- **Security & Access Control:** AWS Identity and Access Management (IAM), Security Groups, Least-Privilege RBAC
-- **Database:** Amazon DynamoDB (NoSQL)
-- **Networking:** Amazon Virtual Private Cloud (VPC), Amazon Route 53
-- **Application Framework:** Flask (Python Web Framework), Jinja2 Templates
-- **SDK & Messaging:** Boto3 (AWS SDK for Python), AWS Simple Notification Service (SNS)
-- **Monitoring & Observability:** AWS CloudWatch (Logs, Metrics, Alarms)
+- **Application:** Python, Flask, Jinja templates
+- **AWS integrations:** Amazon DynamoDB, Amazon SNS, Boto3, EC2 instance role credentials
+- **Local development:** JSON-backed local storage; optional Docker Compose services
 
----
+## Run Locally
 
-## Technical Architecture
+Requires Python 3.10 or later.
 
-### Architecture Diagram
-
-![MedTrack Technical Architecture](images/technical_architecture.png)
-
-### Architectural Flowchart
-
-```mermaid
-flowchart TB
-    subgraph USERS["Users Layer"]
-        admin["fa:fa-shield-alt Admin"]
-        patient["fa:fa-user Patient"]
-        doctor["fa:fa-user-md Doctor"]
-    end
-
-    subgraph APPLAYER["Application Layer (AWS EC2)"]
-        ui["Web / Mobile UI<br/>(HTML5 / CSS3 + Flask Templates)"]
-        flask["Flask Web Application<br/>(Python / Gunicorn / Boto3)"]
-        ec2["AWS EC2 Instance<br/>(Amazon Linux AMI / Nginx Reverse Proxy)"]
-        ui <-->|"Form Submits / Real-time Updates"| flask
-        flask --- ec2
-    end
-
-    subgraph AWSSERVICES["AWS Cloud Services Layer"]
-        sns["AWS SNS<br/>(Notifications Topic)"]
-        iam["AWS IAM Roles<br/>(Instance Profile & RBAC)"]
-        dynamo["Amazon DynamoDB<br/>(NoSQL Database)"]
-    end
-
-    admin -->|"Audit, Admin Actions"| ui
-    patient -->|"Register, Login, Book, View History"| ui
-    doctor -->|"Login, View & Update Patients"| ui
-
-    flask -->|"Trigger Notifications"| sns
-    flask -->|"CRUD Appointments, Users, History"| dynamo
-    dynamo -->|"Real-time Data for Dashboards"| flask
-
-    iam -.->|"RBAC, Least Privilege"| sns
-    iam -.->|"RBAC, Least Privilege"| dynamo
-    iam -.->|"Secure Instance Access"| ec2
-
-    sns -->|"Email / SMS Alerts"| admin
-    sns -->|"Appointment & Medical Alerts"| patient
-    sns -->|"Appointment & Report Updates"| doctor
+```bash
+git clone https://github.com/Krishna009-pro/medtrack-aws-healthcare-system.git
+cd medtrack-aws-healthcare-system
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+AWS_MODE=local python app.py
 ```
 
-### Component Breakdown
-1. **Users Layer:**
-   - **Admin:** Manages platform audit trails, user access verification, and administrative controls.
-   - **Patient:** Handles self-registration, authentication, appointment scheduling, and personal medical history tracking.
-   - **Doctor:** Manages clinical schedules, reviews patient medical backgrounds, and submits post-appointment diagnoses.
-2. **App Layer (AWS EC2):**
-   - **Web/Mobile UI:** Built with semantic HTML5, modern CSS, and Flask Jinja2 templates for responsive user experiences.
-   - **Flask Backend:** Manages routing, session security, input validation, DynamoDB CRUD operations, and SNS dispatching.
-   - **EC2 Instance:** Hosted on Amazon Linux, fronted by Nginx reverse proxy with Gunicorn WSGI workers.
-3. **AWS Cloud Services:**
-   - **AWS SNS:** Broadcasts real-time transactional SMS and email notifications upon appointment booking and diagnostic updates.
-   - **Amazon DynamoDB:** Fully managed NoSQL key-value database providing single-digit millisecond latency for user profiles, appointments, and medical records.
-   - **AWS IAM Roles:** Granular role definitions ensuring secure machine-to-machine and user-to-resource interactions.
+Open [http://localhost:5000](http://localhost:5000). Local mode uses the local data adapter and does not send messages to AWS SNS.
 
----
+On Windows PowerShell, use:
 
-## Dual-Mode Architecture: Local Mode vs. AWS Cloud Mode
+```powershell
+git clone https://github.com/Krishna009-pro/medtrack-aws-healthcare-system.git
+cd medtrack-aws-healthcare-system
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+$env:AWS_MODE = "local"
+python app.py
+```
 
-MedTrack features an **adaptive dual-mode architecture**. When Boto3 cannot find credentials, the system runs in self-contained Local Mode. When credentials are available through Boto3's standard provider chain, including an EC2 instance profile, it selects AWS Mode without requiring AWS access keys in the application environment.
+## AWS Deployment Notes
 
-### Mode Comparison Matrix
-
-| Component | Local Mode (No Credentials) | AWS Cloud Mode (Credentials Present) |
-| :--- | :--- | :--- |
-| **Trigger** | `AWS_MODE=local`, or Boto3 cannot find credentials | Boto3 finds credentials in its standard provider chain, including an EC2 instance profile |
-| **Database** | JSON-backed DynamoDB mock engine (`data/local_db.json`) | Live **Amazon DynamoDB** tables with Global Secondary Indexes |
-| **Notifications** | Dispatches to console, logs to `data/sns_notifications.log`, & creates in-app alerts | Dispatches real-time SMS and email alerts via **AWS SNS** |
-| **Dependencies** | Runs with Flask and the app's local storage adapter | Uses **Boto3** SDK to communicate with AWS APIs |
-| **UI Indicator** | Amber `<span class="badge bg-warning">Local Mode</span>` badge | Green `<span class="badge bg-success">AWS Mode</span>` badge |
-| **Health API** | `{"status": "healthy", "mode": "local", "aws_enabled": false}` | `{"status": "healthy", "mode": "aws", "aws_enabled": true}` |
-
-### Ready-To-Use Local Test Accounts
-When running in Local Mode, the database automatically initializes with sample seed records:
-- **Administrator:** `admin@medtrack.com` (Local Mode demo only)
-- **Doctor:** `doctor@medtrack.com` (Local Mode demo only)
-- **Patient:** `patient@medtrack.com` (Local Mode demo only)
-The sample passwords are documented in the local-only `docs/MEDTRACK_SPECIFICATION.md`; do not use those accounts or passwords in an AWS deployment.
-
-### How to Use AWS on EC2 Without Stored Access Keys
-
-Attach an IAM role (instance profile) to the EC2 instance before starting MedTrack. Boto3 retrieves and refreshes temporary role credentials through EC2 instance metadata; do not copy access keys into `.env` or source code. In `auto` mode, MedTrack checks the Boto3 credential chain and selects AWS Mode when the role is available.
-
-Set non-secret configuration in the shell or service environment:
+For an EC2 deployment, attach an IAM instance profile to the instance. Boto3 then obtains temporary credentials from the role; do not put AWS access keys in the app’s `.env` file. Set the region and SNS topic ARN in the environment before starting the app:
 
 ```bash
 export AWS_MODE=auto
 export AWS_DEFAULT_REGION=us-east-1
-export SNS_TOPIC_ARN=arn:aws:sns:us-east-1:ACCOUNT_ID:MedTrack-Alerts
-export FLASK_ENV=production
+export SNS_TOPIC_ARN='arn:aws:sns:us-east-1:ACCOUNT_ID:TOPIC_NAME'
 export FLASK_DEBUG=False
-export SECRET_KEY='replace-with-a-long-random-production-secret'
-
-# Run once if the DynamoDB tables and indexes have not been created yet.
-python scripts/init_dynamodb.py
-
-# Start the web app
-python app.py
+export SECRET_KEY='use-a-long-random-secret'
 ```
 
-`AWS_REGION` is also supported and takes precedence over `AWS_DEFAULT_REGION`. `SNS_TOPIC_ARN` is enough when one topic handles both notification types; use the two dedicated topic variables when you want separate topics. The EC2 role must allow the application's DynamoDB read/write/query actions and `sns:Publish` on these resources. The initializer requires `dynamodb:CreateTable`; use a role with that permission for first-time setup, then use the runtime role with narrower permissions. `python app.py` listens on port 5000 by default. Set `FLASK_DEBUG=False` on EC2. For production traffic, run Gunicorn behind Nginx as described in [DEPLOYMENT.md](DEPLOYMENT.md).
+Create the DynamoDB tables once, using a role with `dynamodb:CreateTable`, then start the app:
 
-### How to Switch Between Modes
-1. **To run locally (Default):**
-   ```bash
-   python run.py
-   ```
-   Open `http://localhost:5000` to immediately register, log in, book appointments, and write diagnoses.
-2. **To use AWS Cloud:**
-   On EC2, attach an IAM role and set the region and SNS topic ARNs as shown above. For a development machine, configure credentials using the AWS CLI/shared credentials profile or environment variables. Restart the application after changing its mode or configuration.
-
----
-
-## Technical Implementation Instructions
-
-### 1. Environment Setup & Cloud Configuration
-- Provision Python 3.10+ virtual environment and install dependencies: `Flask`, `boto3`, `gunicorn`.
-- Attach an EC2 instance profile for runtime AWS credentials. Set only non-secret region and SNS topic configuration in the application environment.
-- Set up an Amazon EC2 instance with Amazon Linux AMI inside an Amazon VPC.
-- Attach an IAM Instance Profile to EC2 with explicit policies for DynamoDB read/write and SNS publish actions.
-
-### 2. Cloud Database Design (Amazon DynamoDB)
-- Model DynamoDB tables with dedicated Partition Keys (`PK`) and Sort Keys (`SK`):
-  - `Users` (`UserID`)
-  - `Doctors` (`DoctorID`, `UserID`)
-  - `Patients` (`PatientID`, `UserID`)
-  - `Appointments` (`AppointmentID`, `PatientID`, `DoctorID`)
-  - `Diagnosis` (`DiagnosisID`, `AppointmentID`)
-  - `Notifications` (`NotificationID`, `UserID`)
-- Establish Global Secondary Indexes (GSIs) on foreign key attributes (`DoctorID`, `PatientID`, `UserID`) to support high-throughput lookups.
-
-### 3. Building the Flask Application
-- **Authentication & RBAC:** Implement session-based authentication separating Patient and Doctor roles.
-- **Appointment Scheduling:** Build real-time calendar and time-slot booking forms preventing double bookings.
-- **Diagnosis & Medical Submissions:** Create medical history viewer and diagnosis submission portals for verified physicians.
-- **RESTful Endpoints:** Implement modular Flask blueprints (`auth`, `patient`, `doctor`, `admin`, `api`).
-
-### 4. Cloud Notifications with AWS SNS
-- Create Amazon SNS Standard Topics (e.g., `MedTrack-Appointment-Alerts`, `MedTrack-Diagnosis-Updates`).
-- Implement Boto3 SNS client triggers within Flask routes upon successful booking or diagnostic submission.
-- Enable email and SMS protocol subscriptions for automated alert delivery.
-
-### 5. Secure Access Control with IAM
-- Construct IAM policies adhering to least privilege:
-  - Runtime EC2 role permissions should cover the DynamoDB read, write, query, and scan operations the app uses, plus `sns:Publish` for the configured topic. Grant `dynamodb:CreateTable` only to the one-time table setup role.
-- Prevent exposure of AWS access keys by utilizing instance metadata service (IMDSv2).
-
-### 6. Deployment on AWS EC2
-- Configure Nginx as a reverse proxy listening on port 80/443, forwarding traffic to Gunicorn listening on unix sockets or localhost.
-- Configure Systemd service units to supervise Gunicorn processes with automatic restarts.
-- Bind security groups allowing inbound HTTP/HTTPS (80/443) and SSH (22) from authorized management IPs.
-
-### 7. Testing & Validation
-- Execute end-to-end integration tests for user registration, login, appointment booking, diagnosis submission, and SNS notifications.
-- Perform concurrent user simulations to validate DynamoDB capacity modes (On-Demand vs. Provisioned) and EC2 CPU/memory utilization.
-
-### 8. Monitoring & Optimization
-- Stream application logs and Nginx access/error logs to AWS CloudWatch Logs.
-- Configure CloudWatch Alarms for EC2 CPU utilization (>75%), 5xx HTTP response codes, and DynamoDB throttling events.
-
----
-
-## Entity-Relationship (ER) Diagram & Data Model
-
-An **Entity-Relationship (ER) diagram** visually represents the logical structure of a database by defining entities, their attributes, and relationships. This structured approach supports database normalization, data integrity, and efficient query design.
-
-### ER Diagram
-
-![MedTrack ER Diagram](images/er_diagram.png)
-
-### Logical ER Model
-
-```mermaid
-erDiagram
-    Users ||--o{ Doctors : "has role (1:N)"
-    Users ||--o{ Patients : "has role (1:N)"
-    Users ||--o{ Notifications : "receives (1:N)"
-    Doctors ||--o{ Appointments : "conducts (1:N)"
-    Patients ||--o{ Appointments : "books (1:N)"
-    Appointments ||--|| Diagnosis : "has record (1:1)"
-
-    Users {
-        string UserID PK "Unique User Identifier"
-        string Name "Full Name"
-        string Email "Email Address (Unique)"
-        string Role "User Role (Doctor/Patient/Admin)"
-        string Password "Hashed Password"
-        string Phone "Contact Phone Number"
-    }
-
-    Doctors {
-        string DoctorID PK "Unique Doctor Identifier"
-        string UserID FK "Foreign Key to Users"
-        string Specialization "Medical Specialty"
-        int Experience "Years of Practice"
-    }
-
-    Patients {
-        string PatientID PK "Unique Patient Identifier"
-        string UserID FK "Foreign Key to Users"
-        int Age "Patient Age"
-        string MedicalHistory "Historical Clinical Notes"
-    }
-
-    Appointments {
-        string AppointmentID PK "Unique Appointment Identifier"
-        string PatientID FK "Foreign Key to Patients"
-        string DoctorID FK "Foreign Key to Doctors"
-        string Date "Scheduled Date (YYYY-MM-DD)"
-        string Time "Scheduled Time Slot (HH:MM)"
-        string Status "Status (Pending/Confirmed/Completed/Cancelled)"
-    }
-
-    Diagnosis {
-        string DiagnosisID PK "Unique Diagnosis Identifier"
-        string AppointmentID FK "Foreign Key to Appointments"
-        string DoctorID FK "Foreign Key to Doctors"
-        string PatientID FK "Foreign Key to Patients"
-        string Report "Clinical Diagnosis & Prescription"
-        string Date "Submission Date (YYYY-MM-DD)"
-    }
-
-    Notifications {
-        string NotificationID PK "Unique Notification Identifier"
-        string UserID FK "Foreign Key to Users"
-        string Message "Notification Text"
-        string Timestamp "Dispatched Timestamp (ISO 8601)"
-    }
+```bash
+python3 scripts/init_dynamodb.py
+python3 app.py
 ```
 
----
+The EC2 runtime role must allow the app’s required DynamoDB actions and `sns:Publish` on the configured topic. SNS email subscribers must confirm their subscription before receiving email. The application only publishes to the configured topic when a supported event occurs, such as appointment booking, confirmation/cancellation, or diagnosis submission. See [DEPLOYMENT.md](DEPLOYMENT.md) for IAM, systemd, Gunicorn, and Nginx details.
 
-## Database Schema & Entity Specifications
+> The EC2 and Render URLs above are included as provided project links. Availability depends on their hosting configuration.
 
-### 1. Entities & Primary Keys
-| Entity | Primary Key (PK) | Description |
-| :--- | :--- | :--- |
-| **Users** | `UserID` | Core user identity for authentication and profile management |
-| **Doctors** | `DoctorID` | Professional clinical metadata for licensed doctors |
-| **Patients** | `PatientID` | Clinical metadata and medical background for patients |
-| **Appointments** | `AppointmentID` | Scheduled consultation sessions between doctor and patient |
-| **Diagnosis** | `DiagnosisID` | Clinical findings, diagnostic reports, and prescriptions |
-| **Notifications**| `NotificationID` | Dispatched transactional messages and alerts |
+## Architecture
 
-### 2. Entity Attributes
+![MedTrack technical architecture](images/technical_architecture.png)
 
-#### Users
-- `UserID` (PK): Unique identifier (UUID/string)
-- `Name`: Full legal name
-- `Email`: Email address (used as login username)
-- `Role`: User system role (`Doctor`, `Patient`, `Admin`)
-- `Password`: Securely salted and hashed password
-- `Phone`: Contact phone number for SMS notifications
+![MedTrack entity relationship diagram](images/er_diagram.png)
 
-#### Doctors
-- `DoctorID` (PK): Unique identifier for doctor profile
-- `UserID` (FK): Reference to associated `Users` record
-- `Specialization`: Medical field (e.g., Cardiology, Dermatology, General Practice)
-- `Experience`: Years of medical experience
+## Project Structure
 
-#### Patients
-- `PatientID` (PK): Unique identifier for patient profile
-- `UserID` (FK): Reference to associated `Users` record
-- `Age`: Age of patient
-- `MedicalHistory`: Baseline medical conditions, allergies, and past surgeries
+```text
+app/                  Flask app, routes, models, templates, and services
+scripts/              Database initialization utilities
+docs/                 Project report and web screenshots
+images/               Architecture and data model diagrams
+DEPLOYMENT.md         AWS deployment guide
+requirements.txt      Python dependencies
+```
 
-#### Appointments
-- `AppointmentID` (PK): Unique identifier for appointment
-- `PatientID` (FK): Reference to `Patients` entity
-- `DoctorID` (FK): Reference to `Doctors` entity
-- `Date`: Date of scheduled consultation
-- `Time`: Time slot of consultation
-- `Status`: Current state (`Pending`, `Confirmed`, `Completed`, `Cancelled`)
+## License
 
-#### Diagnosis
-- `DiagnosisID` (PK): Unique identifier for diagnostic report
-- `AppointmentID` (FK): One-to-one reference to consultation session
-- `DoctorID` (FK): Reference to attending physician
-- `PatientID` (FK): Reference to patient recipient
-- `Report`: Medical findings, lab reviews, and prescription details
-- `Date`: Date of diagnostic report submission
-
-#### Notifications
-- `NotificationID` (PK): Unique identifier for notification
-- `UserID` (FK): Recipient user reference
-- `Message`: Content of the notification alert
-- `Timestamp`: UTC timestamp of generation and dispatch
-
-### 3. Entity Relationships & Cardinality
-- **Users to Doctors, Patients, Notifications (1:N):** One user identity links to specific role profiles and can accumulate multiple notification logs.
-- **Doctors to Appointments (1:N):** A doctor conducts multiple appointments across time slots.
-- **Patients to Appointments (1:N):** A patient can schedule multiple appointments with different doctors.
-- **Appointments to Diagnosis (1:1):** Each appointment generates exactly one official diagnostic record, ensuring 1:1 referential integrity.
-
-### 4. Normalization and Structural Integrity
-The schema is normalized to eliminate data redundancy and prevent update/delete anomalies:
-- Distinct entities separate identity (`Users`), clinical qualifications (`Doctors`), and personal health records (`Patients`).
-- Transactional interactions (`Appointments`, `Diagnosis`, `Notifications`) reference primary keys as foreign keys, maintaining referential integrity across relational or NoSQL DynamoDB table structures.
-
-### 5. Use Case Coverage
-- **Role-Based Access Control:** Strict division between patient features and physician workflows.
-- **Lifecycle Appointment Tracking:** Full visibility over appointment state changes from booking to completion.
-- **Secure Medical Records Management:** Confidential diagnostic reporting tied directly to validated appointments.
-- **Real-Time Automated Alerting:** SNS triggers informing patients and doctors of schedule confirmations and diagnostic availability.
-
----
-
-## Project Learning Outcomes
-By completing the MedTrack platform, developers and engineers demonstrate:
-1. Building secure, enterprise-grade healthcare applications using **Flask** and **Python**.
-2. Designing scalable, normalized cloud databases on **Amazon DynamoDB**.
-3. Applying **AWS IAM** policies and roles for HIPAA-aligned least-privilege security.
-4. Implementing real-time event-driven messaging using **AWS SNS**.
-5. Deploying, hardening, and monitoring production workloads on **AWS EC2** with **CloudWatch**.
+No license file is currently included. Contact the repository owner for reuse or distribution permissions.
