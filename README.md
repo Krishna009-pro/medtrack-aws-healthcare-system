@@ -1,5 +1,10 @@
 # MedTrack — Healthcare Management System
 
+![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![Flask 3.x](https://img.shields.io/badge/Flask-3.x-000000?logo=flask&logoColor=white)
+![AWS EC2, DynamoDB, SNS](https://img.shields.io/badge/AWS-EC2%20%7C%20DynamoDB%20%7C%20SNS-FF9900?logo=amazonaws&logoColor=white)
+![License unspecified](https://img.shields.io/badge/License-unspecified-lightgrey)
+
 MedTrack is a Flask web application for patient and clinician workflows. Patients can create accounts, find doctors, book appointments, and review medical history. Doctors can manage schedules, review appointments, and submit diagnosis reports. The application supports local development and AWS-backed operation with DynamoDB and SNS.
 
 ## Live Demo and Project Materials
