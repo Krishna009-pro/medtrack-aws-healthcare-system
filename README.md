@@ -104,7 +104,19 @@ The EC2 runtime role must allow the app’s required DynamoDB actions and `sns:P
 
 ## Architecture
 
-![MedTrack technical architecture](images/technical_architecture.png)
+```mermaid
+flowchart LR
+    user[Patient, Doctor, or Admin] --> web[MedTrack Web UI]
+    web --> flask[Flask Application]
+    flask --> data{Storage mode}
+    data -->|Local mode| local[(JSON local storage)]
+    data -->|AWS mode| dynamodb[(Amazon DynamoDB)]
+    flask -->|Configured notifications| sns[Amazon SNS topic]
+    role[IAM instance role] -. temporary credentials .-> flask
+    sns --> subscribers[Confirmed topic subscribers]
+```
+
+### Data Model
 
 ![MedTrack entity relationship diagram](images/er_diagram.png)
 
