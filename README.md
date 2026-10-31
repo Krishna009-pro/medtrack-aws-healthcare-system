@@ -1,5 +1,12 @@
 # MedTrack: Cloud-Based Healthcare Management System
 
+## Live Demo & Project Report
+
+- 🚀 **AWS EC2 Live Deployment:** [Open MedTrack](http://3.94.64.130:5000/)
+- 🌐 **Render Deployment:** [Open MedTrack on Render](https://medtrack-aws-healthcare-system.onrender.com)
+- 🎥 **Walkthrough & Demo Video:** [Watch the project demo](https://drive.google.com/file/d/1B_X2V7ITx84ZhDU0fs945yEgdlitlXAb/view?usp=sharing)
+- 📄 **Project Report:** [Download the MedTrack project documentation](docs/MedTrack_Project_Documentation.docx)
+
 ## Executive Overview
 
 In today’s fast-evolving healthcare landscape, efficient communication and coordination between doctors and patients are crucial. **MedTrack** is a robust, cloud-powered healthcare management platform designed to streamline patient–doctor interactions by providing a centralized platform for booking appointments, managing medical histories, and enabling diagnosis submissions.
